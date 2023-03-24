@@ -1,82 +1,68 @@
 #include "Kernel.h"
-#include <iostream>
 
-static __global__ void sum(int* d_a, int* d_b, const int N) {
+#define gpuErrChk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
+static inline void gpuAssert(cudaError_t code, const char* file, int line, bool abort = true) {
+	if (code != cudaSuccess) {
+		fprintf(stderr, "GPU assert: %s %s %d\n", cudaGetErrorString(code), file, line);
+		if (abort) {
+			std::exit(code);
+		}
+	}
+}
+
+static __global__ void sum(uint32_t* d_a, const uint32_t N) {
 	int index = threadIdx.x + blockIdx.x * blockDim.x;
 
 	if (index < N) {
-		d_a[index] += d_b[index];
+		d_a[index] = index;
+		d_a[index] |= 0xff000000;
 	}
 }
 
-Kernel::Kernel(): N(1024), TPB(32){
-	srand(time(NULL));
-
-	t1 = new int[N];
-	t2 = new int[N];
-
-	for (int i = 0; i < N; i++) {
-		t1[i] = rand() % 10 + 1;
-		t2[i] = rand() % 10 + 1;
-	}
-
-
-	// Printing
-	std::cout << "T1: ";
-	for (int i = 0; i < TPB; i++) {
-		std::cout.width(3);
-		std::cout << t1[i];
-	}
-	std::cout << '\n';
-	std::cout << "T2: ";
-	for (int i = 0; i < TPB; i++) {
-		std::cout.width(3);
-		std::cout << t2[i];
-	}
-
-	std::cout << '\n';
-	std::cout << '\n';
+Kernel::Kernel(): kernelTimeMs(0.f), TPB(64){
 }
 
-void Kernel::run_kernel() {
-	int* d_a, * d_b;
-	cudaMalloc(&d_a, N * sizeof(*t1));
-	cudaMalloc(&d_b, N * sizeof(*t1));
+void Kernel::runKernel() {
+	// TODO: Jeœli to bêdzie w pêtli siê odœwie¿a³o to warto nie alokowaæ tego za ka¿dym razem
+	uint32_t* d_buffer = nullptr;
+	cudaEvent_t start, stop;
+	cudaEventCreate(&start);
+	cudaEventCreate(&stop);
 
-	cudaMemcpy(d_a, t1, N * sizeof(*t1), cudaMemcpyHostToDevice);
-	cudaMemcpy(d_b, t2, N * sizeof(*t2), cudaMemcpyHostToDevice);
-
-	sum << < (N + TPB - 1) / TPB, TPB >> > (d_a, d_b, N);
-
-	cudaMemcpy(t1, d_a, N * sizeof(*t1), cudaMemcpyDeviceToHost);
-
-	cudaFree(d_a);
-	cudaFree(d_b);
-
-	for (int i = 0; i < TPB; i++) {
-		std::cout.width(3);
-		std::cout << t1[i];
+	if (!bufferSize){
+		throw std::invalid_argument("buffer_size is NULL!");
 	}
-	std::cout << '\n';
+	else if (!buffer) {
+		throw std::invalid_argument("buffer is NULL!");
+	}
+
+	gpuErrChk(cudaMalloc(&d_buffer,  bufferSize * sizeof(*d_buffer)));
+
+	gpuErrChk(cudaMemcpy(d_buffer, buffer, bufferSize * sizeof(*d_buffer), cudaMemcpyHostToDevice));
+
+	cudaEventRecord(start);
+	sum <<< (bufferSize + TPB - 1) / TPB, TPB >>> (d_buffer, bufferSize);
+	cudaEventRecord(stop);
+	cudaEventSynchronize(stop);
+	cudaEventElapsedTime(&kernelTimeMs, start, stop);
+
+	gpuErrChk(cudaMemcpy(buffer, d_buffer, bufferSize * sizeof(*d_buffer), cudaMemcpyDeviceToHost));
+
+	gpuErrChk(cudaFree(d_buffer));
 }
 
-string Kernel::getText()
+float Kernel::getKernelTimeMs()
 {
-	string out;
-	
-	for (int i = 0; i < N; i++) {
-		out += t1[i];
-	}
-	return out;
-	/*char *buff = new char[out.length()];
-
-	for (int i = 0; i < N; i++) {
-		buff[i] = out[i];
-	}
-	return buff;*/
+	return kernelTimeMs;
 }
 
-Kernel::~Kernel() {
-	delete[] t1;
-	delete[] t2;
+Kernel::~Kernel() {}
+
+void Kernel::setBufferSize(uint32_t size){
+	this->bufferSize = size;
+}
+
+void Kernel::setBuffer(uint32_t* buffer)
+{
+	this->buffer = buffer;
 }

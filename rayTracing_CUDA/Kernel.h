@@ -1,8 +1,8 @@
 #pragma once
 #include <cuda_runtime.h>
-#include <random>
-#include <ctime>
-#include <string>
+#include <curand.h>
+#include <iostream>
+#include <glm/glm.hpp>
 
 using std::string;
 
@@ -10,13 +10,14 @@ class Kernel {
 public:
 	Kernel::Kernel();
 	Kernel::~Kernel();
-	void run_kernel();
-
-	string getText();
+	void setBufferSize(uint32_t size);
+	void setBuffer(uint32_t* buffer);
+	void runKernel();
+	float getKernelTimeMs();
 
 private:
-	const int N;
 	const int TPB;
-	int* t1, * t2;
-
+	float kernelTimeMs;
+	uint32_t bufferSize = NULL;
+	uint32_t* buffer = nullptr;
 };
