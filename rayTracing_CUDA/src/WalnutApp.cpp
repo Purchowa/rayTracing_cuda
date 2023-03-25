@@ -4,7 +4,7 @@
 #include "Walnut/EntryPoint.h"
 
 #include "Walnut/Image.h"
-#include "../../rayTracing_CUDA/Kernel.h"
+#include "Kernel.h"
 
 
 using namespace Walnut;
