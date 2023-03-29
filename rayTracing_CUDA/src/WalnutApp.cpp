@@ -4,20 +4,20 @@
 #include "Walnut/EntryPoint.h"
 
 #include "Walnut/Image.h"
-#include "Kernel.h"
+#include "Render.h"
 
 
 using namespace Walnut;
 
 class MainLayer : public Walnut::Layer {
 public:
-	MainLayer(): kernel() {}
+	MainLayer(): render(){}
 
 	virtual void OnUIRender() override {
 		ImGui::Begin("Options");
-		ImGui::Text("Last render: %.3fms", kernel.getKernelTimeMs());
+		ImGui::Text("Last render: %.3fms", render.getRednderTimeMs());
 		if (ImGui::Button("Render")) {
-			render();
+			renderImage();
 		}	
 		ImGui::End();
 		
@@ -28,41 +28,21 @@ public:
 		imageWidth = ImGui::GetContentRegionAvail().x;
 		imageHeight = ImGui::GetContentRegionAvail().y;
 
-		if (sceneImage) {
-			ImGui::Image(sceneImage->GetDescriptorSet(), { (float)sceneImage->GetWidth(), (float)sceneImage->GetHeight() });
+		auto finalImage = render.getFinalImage();
+		if (finalImage){
+			ImGui::Image(finalImage->GetDescriptorSet(), { (float)finalImage->GetWidth(), (float)finalImage->GetHeight() });
 		}	
 		ImGui::End();
 		ImGui::PopStyleVar();
 	}
 
-	~MainLayer() {
-		delete[] imageBuffer;
-	}
-
 private:
-	Kernel kernel;
+	Render render;
+	uint32_t imageWidth, imageHeight;
 
-	uint32_t imageWidth = 0, imageHeight = 0;
-	uint32_t* imageBuffer = nullptr;
-	std::unique_ptr<Image> sceneImage;
-	
-
-	void render() {
-		if (sceneImage == nullptr || imageWidth != sceneImage->GetWidth() || imageHeight != sceneImage->GetHeight()) {
-			sceneImage = std::make_unique<Image>(imageWidth, imageHeight, ImageFormat::RGBA);
-			delete[] imageBuffer;
-			imageBuffer = new uint32_t[imageWidth * imageHeight];
-			kernel.setBufferSize(imageWidth * imageHeight);
-			kernel.setBuffer(imageBuffer);
-		}
-		try {
-			kernel.runKernel();
-			sceneImage->SetData(imageBuffer);
-		}
-		catch (const std::invalid_argument& ex) {
-			std::cerr << ex.what() << '\n';
-		}
-		
+	void renderImage() {
+		render.onResize(imageWidth, imageHeight);
+		render.render();
 	}
 };
 

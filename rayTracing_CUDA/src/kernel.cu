@@ -30,10 +30,10 @@ void Kernel::runKernel() {
 	cudaEventCreate(&stop);
 
 	if (!bufferSize){
-		throw std::invalid_argument("buffer_size is NULL!");
+		throw std::invalid_argument("CUDA: buffer size is not set!");
 	}
 	else if (!buffer) {
-		throw std::invalid_argument("buffer is NULL!");
+		throw std::invalid_argument("CUDA: buffer is NULL!");
 	}
 
 	gpuErrChk(cudaMalloc(&d_buffer,  bufferSize * sizeof(*d_buffer)));
