@@ -5,6 +5,7 @@
 
 #include "Walnut/Image.h"
 #include "Render.h"
+#include <cstring>
 
 
 using namespace Walnut;
@@ -18,7 +19,14 @@ public:
 		ImGui::Text("Last render: %.3fms", render.getRednderTimeMs());
 		if (ImGui::Button("Render")) {
 			renderImage();
-		}	
+		}
+		ImGui::Text("Real time render ->");
+		if (ImGui::Button("on")) {
+			realTimeRender = true;
+		}
+		if (ImGui::Button("off")) {
+			realTimeRender = false;
+		}
 		ImGui::End();
 		
 		// Scene viewport
@@ -34,11 +42,15 @@ public:
 		}	
 		ImGui::End();
 		ImGui::PopStyleVar();
+		if (realTimeRender) {
+			renderImage();
+		}
 	}
 
 private:
 	Render render;
 	uint32_t imageWidth, imageHeight;
+	bool realTimeRender = false;
 
 	void renderImage() {
 		render.onResize(imageWidth, imageHeight);

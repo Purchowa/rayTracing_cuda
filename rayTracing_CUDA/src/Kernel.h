@@ -10,14 +10,14 @@ class Kernel {
 public:
 	Kernel::Kernel();
 	Kernel::~Kernel();
-	void setBufferSize(uint32_t size);
+	void setImgDim(glm::uvec2 imgDim);
 	void setBuffer(uint32_t* buffer);
 	void runKernel();
 	float getKernelTimeMs();
 
 private:
-	const int TPB;
+	const uint32_t TPB;
 	float kernelTimeMs;
-	uint32_t bufferSize = NULL;
+	glm::uvec2 imgDim{ 0, 0 };
 	uint32_t* buffer = nullptr;
 };

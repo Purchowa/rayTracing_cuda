@@ -14,20 +14,17 @@ void Render::render() {
 
 void Render::onResize(uint32_t width, uint32_t height) {
 	if (image) { // if exists
-		if (image->GetWidth() != width || image->GetHeight() != height) {
-			image->Resize(width, height);
-			resizeImageBuffer(width, height);
-			kernel.setBufferSize(width * height);
-			kernel.setBuffer(imageBuffer);
+		if (image->GetWidth() == width && image->GetHeight() == height) {
+			return;
 		}
-		return;
+		image->Resize(width, height);
 	}
 	else {
 		image = std::make_shared<Walnut::Image>(width, height, Walnut::ImageFormat::RGBA);
-		resizeImageBuffer(width, height);
-		kernel.setBufferSize(width * height);
-		kernel.setBuffer(imageBuffer);
 	}
+	reallocateImageBuffer(width, height);
+	kernel.setImgDim({ width, height });
+	kernel.setBuffer(imageBuffer);
 }
 
 float Render::getRednderTimeMs()
@@ -42,9 +39,10 @@ std::shared_ptr<Walnut::Image> Render::getFinalImage()
 
 Render::~Render() {
 	delete[] imageBuffer;
+	imageBuffer = nullptr;
 }
 
-void Render::resizeImageBuffer(uint32_t x, uint32_t y)
+void Render::reallocateImageBuffer(uint32_t x, uint32_t y)
 {
 	delete[] imageBuffer;
 	imageBuffer = new uint32_t[x * (size_t)y];

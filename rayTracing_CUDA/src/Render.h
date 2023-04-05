@@ -1,6 +1,8 @@
 #pragma once
 #include "Kernel.h"
+#include "Sphere.h"
 #include "Walnut/Image.h"
+
 #include <memory>
 
 class Render {
@@ -18,5 +20,5 @@ private:
 	uint32_t* imageBuffer = nullptr;
 	std::shared_ptr<Walnut::Image> image;
 
-	void resizeImageBuffer(uint32_t x, uint32_t y);
+	void reallocateImageBuffer(uint32_t x, uint32_t y);
 };
