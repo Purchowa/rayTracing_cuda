@@ -3,6 +3,7 @@
 #include <curand.h>
 #include <iostream>
 #include <glm/glm.hpp>
+#include "../hittables/Sphere.h"
 
 using std::string;
 

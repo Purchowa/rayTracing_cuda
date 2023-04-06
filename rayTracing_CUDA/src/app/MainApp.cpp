@@ -20,13 +20,14 @@ public:
 		if (ImGui::Button("Render")) {
 			renderImage();
 		}
-		ImGui::Text("Real time render ->");
+		ImGui::Text("Real time render");
 		if (ImGui::Button("on")) {
 			realTimeRender = true;
 		}
 		if (ImGui::Button("off")) {
 			realTimeRender = false;
 		}
+		ImGui::Text("Scene resolution: %d x %d", imageWidth, imageHeight);
 		ImGui::End();
 		
 		// Scene viewport
@@ -49,7 +50,7 @@ public:
 
 private:
 	Render render;
-	uint32_t imageWidth, imageHeight;
+	uint32_t imageWidth = 0, imageHeight = 0;
 	bool realTimeRender = false;
 
 	void renderImage() {

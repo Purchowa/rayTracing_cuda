@@ -1,9 +1,14 @@
 #pragma once
 #include "Render.h"
 
+Render::Render() {
+	hittables = new Hittable*[1];
+	hittables[0] = new Sphere({ 0.f, 0.f, -2.f }, 0.5f);
+}
+
 void Render::render() {
 	try {
-		kernel.runKernel();
+		kernel.runKernel(); // run with hittables
 		image->SetData(imageBuffer);
 	}
 	catch (const std::invalid_argument& ex) {
@@ -39,7 +44,10 @@ std::shared_ptr<Walnut::Image> Render::getFinalImage()
 
 Render::~Render() {
 	delete[] imageBuffer;
+	delete[] hittables;
+
 	imageBuffer = nullptr;
+	hittables = nullptr;
 }
 
 void Render::reallocateImageBuffer(uint32_t x, uint32_t y)

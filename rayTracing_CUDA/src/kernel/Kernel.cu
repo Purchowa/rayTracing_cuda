@@ -12,19 +12,18 @@ static inline void gpuAssert(cudaError_t code, const char* file, int line, bool 
 }
 
 static __global__ void sum(uint32_t* d_a, const glm::uvec2 imgDim) {
-	unsigned int x = threadIdx.x + blockIdx.x * blockDim.x;
-	unsigned int y = threadIdx.y + blockIdx.y * blockDim.y;
+	uint32_t x = threadIdx.x + blockIdx.x * blockDim.x;
+	uint32_t y = threadIdx.y + blockIdx.y * blockDim.y;
+	uint32_t index = x + y * blockDim.x * gridDim.x;
 
-	int threadId = (blockIdx.x + blockIdx.y * gridDim.x) * (blockDim.x * blockDim.y) + (threadIdx.y * blockDim.x) + threadIdx.x;
-
-	if (imgDim.x <= x || imgDim.y <= y) {
+	if (imgDim.x <= x || imgDim.y <= y || imgDim.x * imgDim.y <= index) {
 		return;
 	}
-	glm::vec2 coord = { (float)x / (float)imgDim.x, (float)y / (float)imgDim.y};
+	glm::vec2 coord = { (float)x / (float)imgDim.x, (float)y / (float)imgDim.y}; // [0; 1]
+	coord *= 2.f - 1.f; // [-1; 1]
 	uint8_t r = (uint8_t)(coord.x * 255.0f);
 	uint8_t g = (uint8_t)(coord.y * 255.0f);
 
-	uint32_t index = x + y * blockDim.x * gridDim.x;
 	d_a[index] = 0xff000000 | (g << 8) | r;
 }
 
@@ -33,7 +32,6 @@ Kernel::Kernel(): kernelTimeMs(0.f), TPB(16){
 
 void Kernel::runKernel() {
 	// TODO: Jeœli to bêdzie w pêtli siê odœwie¿a³o to warto nie alokowaæ tego za ka¿dym razem
-	// TODO: Niepotrzeba bufferSize skoro muszê mieæ imgDim
 	uint32_t* d_buffer = nullptr;
 	uint32_t bufferSize = imgDim.x * imgDim.y;
 	cudaEvent_t start, stop;

@@ -1,13 +1,15 @@
 #pragma once
-#include "Kernel.h"
-#include "Sphere.h"
+#include "../kernel/Kernel.h"
+#include "../hittables/Sphere.h"
 #include "Walnut/Image.h"
 
 #include <memory>
 
 class Render {
 public:
-	void onResize(uint32_t nImgWidth, uint32_t nImgHeight); // gets called every frame
+	Render();
+
+	void onResize(uint32_t nImgWidth, uint32_t nImgHeight);
 	void render();
 	float getRednderTimeMs();
 	std::shared_ptr<Walnut::Image> getFinalImage();
@@ -15,7 +17,7 @@ public:
 	~Render();
 private:
 	Kernel kernel;
-
+	Hittable** hittables;
 	uint32_t imageWidth = 0, imageHeight = 0;
 	uint32_t* imageBuffer = nullptr;
 	std::shared_ptr<Walnut::Image> image;
