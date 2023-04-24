@@ -2,13 +2,12 @@
 #include "Render.h"
 
 Render::Render() {
-	hittables = new Hittable*[1];
-	hittables[0] = new Sphere({ 0.f, 0.f, -2.f }, 0.5f);
+	hittables = new Sphere({ 0.f, 0.f, 2.f }, 0.5f);
 }
 
 void Render::render() {
 	try {
-		kernel.runKernel(); // run with hittables
+		kernel.runKernel(hittables);
 		image->SetData(imageBuffer);
 	}
 	catch (const std::invalid_argument& ex) {
@@ -44,7 +43,7 @@ std::shared_ptr<Walnut::Image> Render::getFinalImage()
 
 Render::~Render() {
 	delete[] imageBuffer;
-	delete[] hittables;
+	delete hittables;
 
 	imageBuffer = nullptr;
 	hittables = nullptr;

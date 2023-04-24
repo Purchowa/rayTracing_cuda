@@ -5,6 +5,7 @@
 #include <glm/glm.hpp>
 #include "../hittables/Sphere.h"
 
+
 using std::string;
 
 class Kernel {
@@ -13,7 +14,7 @@ public:
 	Kernel::~Kernel();
 	void setImgDim(glm::uvec2 imgDim);
 	void setBuffer(uint32_t* buffer);
-	void runKernel();
+	void runKernel(Hittable* hittables);
 	float getKernelTimeMs();
 
 private:
