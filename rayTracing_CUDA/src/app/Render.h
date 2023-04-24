@@ -17,7 +17,7 @@ public:
 	~Render();
 private:
 	Kernel kernel;
-	Hittable** hittables;
+	Hittable* hittables;
 	uint32_t imageWidth = 0, imageHeight = 0;
 	uint32_t* imageBuffer = nullptr;
 	std::shared_ptr<Walnut::Image> image;
