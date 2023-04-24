@@ -1,4 +1,6 @@
 #include "Kernel.h"
+#include "cuda_runtime.h"
+#include "device_launch_parameters.h"
 
 #define gpuErrChk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
 static inline void gpuAssert(cudaError_t code, const char* file, int line, bool abort = true) {
