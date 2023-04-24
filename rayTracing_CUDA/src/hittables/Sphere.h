@@ -1,7 +1,7 @@
 #pragma once
 #include "Hittable.h"
 
-class Sphere : virtual public Hittable {
+class Sphere : public Hittable {
 public:
 	__device__ __host__ Sphere() : center({ 0.f, 0.f, 0.f }), radius(0.f)
 	{}

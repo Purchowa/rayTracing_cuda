@@ -22,9 +22,11 @@ static __global__ void sum(uint32_t* d_a, const glm::uvec2 imgDim, const Hittabl
 	}
 	glm::vec2 coord = { (float)x / (float)imgDim.x, (float)y / (float)imgDim.y}; // [0; 1]
 	coord *= 2.f - 1.f; // [-1; 1]
-	Sphere sp({ 0.5f, 0.5f, 0.f }, 0.25f); // UNDEFINED BEHAVIUR if d_hittable->hit(...)
+	Sphere sp({ 0.5f, 0.5f, 0.f }, 0.25f); // allocated on device so we're good
+	Hittable* hitable = &sp;
 	// For every hittable
-	if (sp.hit({ 0.f, 0.f, 2.f }, {coord.x, coord.y, -1.f})) { // origin of camera, ray direction
+	// UNDEFINED BEHAVIUR if d_hittable->hit(...)
+	if (hitable->hit({ 0.f, 0.f, 2.f }, {coord.x, coord.y, -1.f})) { // origin of camera, ray direction
 		d_a[index] = 0xffabcedf;
 		return;
 	}
