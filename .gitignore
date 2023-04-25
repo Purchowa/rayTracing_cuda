@@ -9,13 +9,18 @@ bin/
 bin-int/
 
 # Files
+*.sln
 *.vcxproj
 *.vcxproj.user
 *.vcxproj.filters
-*.sln
+
+# ImGui
+imgui.ini
 
 # Exclude
 !vendor/bin
+!rayTracing_CUDA/*.vcxproj
+!rayTracing_CUDA.sln
 
 # User-specific files
 *.rsuser
