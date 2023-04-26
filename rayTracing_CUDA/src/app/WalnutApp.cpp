@@ -12,7 +12,9 @@ using namespace Walnut;
 
 class MainLayer : public Walnut::Layer {
 public:
-	MainLayer(): render(){}
+	MainLayer(): render(){
+		scene.sphere.reserve(5);
+	}
 
 	virtual void OnUIRender() override {
 		ImGui::Begin("Options");
@@ -29,10 +31,30 @@ public:
 		}
 		ImGui::Text("Scene resolution: %d x %d", imageWidth, imageHeight);
 		ImGui::End();
-		
-		// Scene viewport
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0.f, 0.f });
+
+		// Scene
 		ImGui::Begin("Scene");
+		if (ImGui::Button("+")) {
+			scene.sphere.push_back(Sphere());
+		}
+		if (!scene.sphere.empty()) {
+			if (ImGui::Button("-")) {
+				scene.sphere.pop_back();
+			}
+		}
+		for (int i = 0; i < scene.sphere.size(); i++) {
+			ImGui::PushID(i);
+			ImGui::Text("Sphere %d", i+1);
+			ImGui::DragFloat3("Postition", &scene.sphere[i].getPositionRef().x, 0.05f);
+			ImGui::DragFloat("Radius", &scene.sphere[i].getRadiusRef(), 0.01f);
+			ImGui::Separator();
+			ImGui::PopID();
+		}
+		ImGui::End();
+
+		// Viewport
+		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2{ 0.f, 0.f });
+		ImGui::Begin("View");
 
 		imageWidth = ImGui::GetContentRegionAvail().x;
 		imageHeight = ImGui::GetContentRegionAvail().y;
@@ -50,12 +72,13 @@ public:
 
 private:
 	Render render;
+	Scene scene;
 	uint32_t imageWidth = 0, imageHeight = 0;
 	bool realTimeRender = false;
 
 	void renderImage() {
 		render.onResize(imageWidth, imageHeight);
-		render.render();
+		render.render(scene);
 	}
 };
 

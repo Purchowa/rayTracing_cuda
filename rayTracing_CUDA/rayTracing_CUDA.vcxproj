@@ -155,15 +155,16 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="src\app\Render.h" />
-    <CudaCompile Include="src\hittables\Hittable.h" />
-    <ClInclude Include="src\hittables\Ray.h" />
-    <CudaCompile Include="src\hittables\Sphere.h" />
+    <ClInclude Include="src\scene\Scene.h" />
+    <CudaCompile Include="src\scene\hittables\Hittable.h" />
+    <ClInclude Include="src\scene\hittables\Ray.h" />
+    <CudaCompile Include="src\scene\hittables\Sphere.h" />
     <CudaCompile Include="src\kernel\Kernel.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\app\Render.cpp" />
     <ClCompile Include="src\app\WalnutApp.cpp" />
-    <CudaCompile Include="src\hittables\Sphere.cpp" />
+    <CudaCompile Include="src\scene\hittables\Sphere.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="src\kernel\Kernel.cu">

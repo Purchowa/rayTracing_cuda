@@ -3,8 +3,8 @@
 #include <curand.h>
 #include <iostream>
 #include <glm/glm.hpp>
-#include "../hittables/Sphere.h"
-
+#include <device_launch_parameters.h>
+#include "../scene/Scene.h"
 
 using std::string;
 
@@ -14,7 +14,7 @@ public:
 	Kernel::~Kernel();
 	void setImgDim(glm::uvec2 imgDim);
 	void setBuffer(uint32_t* buffer);
-	void runKernel(Hittable* hittables);
+	void runKernel(Scene& scene);
 	float getKernelTimeMs();
 
 private:
@@ -23,3 +23,14 @@ private:
 	glm::uvec2 imgDim{ 0, 0 };
 	uint32_t* buffer = nullptr;
 };
+
+#define gpuErrChk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
+static inline void gpuAssert(cudaError_t code, const char* file, int line, bool abort = true) {
+	if (code != cudaSuccess) {
+		fprintf(stderr, "GPU assert: %s %s %d\n", cudaGetErrorString(code), file, line);
+		if (abort) {
+			cudaDeviceReset(); // destroys all allocations, resets all states
+			std::exit(code);
+		}
+	}
+}
