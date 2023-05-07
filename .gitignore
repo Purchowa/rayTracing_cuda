@@ -10,10 +10,10 @@ bin-int/
 vendor/**/out
 
 # Files
-*.sln
-*.vcxproj
-*.vcxproj.user
-*.vcxproj.filters
+# *.sln
+# *.vcxproj
+# *.vcxproj.user
+# *.vcxproj.filters
 
 # ImGui
 imgui.ini
@@ -22,6 +22,7 @@ imgui.ini
 !vendor/bin
 !rayTracing_CUDA/*.vcxproj
 !rayTracing_CUDA.sln
+
 
 # User-specific files
 *.rsuser
