@@ -6,7 +6,7 @@ class Sphere{
 public:
 	__device__ __host__ Sphere();
 	__device__ __host__ Sphere(const glm::vec3& center, const float radius);
-	__device__ __host__ bool hit(const glm::vec3& rayOrigin, const glm::vec3& rayDirection) const;
+	__device__ glm::vec4 hit(const glm::vec3& rayOrigin, const glm::vec2& pixCoord) const; // returns color of pixel
 
 	glm::vec3& getPositionRef();
 	float& getRadiusRef();

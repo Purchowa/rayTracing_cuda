@@ -1,23 +1,23 @@
 #include "Kernel.h"
 
-static __global__ void trace_ray(uint32_t* d_a, const glm::uvec2 imgDim, const Sphere* d_hittable, const uint32_t hittableSize) {
+static __global__ void trace_ray(uint32_t* d_imgBuff, const glm::uvec2 imgDim, const Sphere* d_hittable, const uint32_t hittableSize) {
 	uint32_t x = threadIdx.x + blockIdx.x * blockDim.x;
 	uint32_t y = threadIdx.y + blockIdx.y * blockDim.y;
-	uint32_t index = x + y * blockDim.x * gridDim.x;
+	uint32_t gIndex = x + y * blockDim.x * gridDim.x;
 
-	if (imgDim.x <= x || imgDim.y <= y || imgDim.x * imgDim.y <= index) {
+	if (imgDim.x <= x || imgDim.y <= y || imgDim.x * imgDim.y <= gIndex) {
 		return;
 	}
 	glm::vec2 coord = { ((float)x * 2.f / (float)imgDim.x) - 1.f, ((float)y * 2.f / (float)imgDim.y) - 1.f}; // [-1; 1]
-	// coord *= 2.f - 1.f; // [-1; 1] // This doesn't work...
+
+	if (!hittableSize) {
+		d_imgBuff[gIndex] = convertFromRGBA({0.f, 0.f, 0.f, 1.f});
+		return;
+	}
 
 	for (int i = 0; i < hittableSize; i++) {
-		if (d_hittable[i].hit({ 0.f, 0.f, 2.f }, { coord.x, coord.y, -1.f })) { // origin of camera, ray direction
-			d_a[index] = 0xffabcedf;
-			return;
-		}
+		d_imgBuff[gIndex] = convertFromRGBA(d_hittable[i].hit({0.f, 0.f, -1.f}, coord));
 	}
-	d_a[index] = 0xff000000;
 }
 
 

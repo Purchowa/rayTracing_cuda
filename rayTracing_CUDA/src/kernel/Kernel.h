@@ -5,6 +5,7 @@
 #include <glm/glm.hpp>
 #include <device_launch_parameters.h>
 #include "../scene/Scene.h"
+#include "../utils/utils.h"
 
 using std::string;
 

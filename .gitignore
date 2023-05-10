@@ -3,25 +3,27 @@
 ##
 ## Get latest from https://github.com/github/gitignore/blob/master/VisualStudio.gitignore
 
+
 # Directories
 .vs/
 bin/
 bin-int/
 vendor/**/out
 
-# Files
-# *.sln
-# *.vcxproj
-# *.vcxproj.user
-# *.vcxproj.filters
+
+# Project files
+*.sln
+*.vcxproj
+*.vcxproj.user
+*.vcxproj.filters
+
 
 # ImGui
 imgui.ini
 
+
 # Exclude
 !vendor/bin
-!rayTracing_CUDA/*.vcxproj
-!rayTracing_CUDA.sln
 
 
 # User-specific files
