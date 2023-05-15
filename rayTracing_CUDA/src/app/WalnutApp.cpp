@@ -6,7 +6,7 @@
 #include "Walnut/Image.h"
 #include "Render.h"
 #include <cstring>
-
+#include <glm/gtc/type_ptr.hpp>
 
 using namespace Walnut;
 
@@ -45,8 +45,9 @@ public:
 		for (int i = 0; i < scene.sphere.size(); i++) {
 			ImGui::PushID(i);
 			ImGui::Text("Sphere %d", i+1);
-			ImGui::DragFloat3("Postition", &scene.sphere[i].getPositionRef().x, 0.05f);
+			ImGui::DragFloat3("Postition", glm::value_ptr(scene.sphere[i].getPositionRef()), 0.05f); // glm::value_ptr is same as &..getPositionRef.x
 			ImGui::DragFloat("Radius", &scene.sphere[i].getRadiusRef(), 0.01f);
+			ImGui::ColorEdit4("Color", glm::value_ptr(scene.sphere[i].getColorRef()));
 			ImGui::Separator();
 			ImGui::PopID();
 		}

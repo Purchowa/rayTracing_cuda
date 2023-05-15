@@ -15,9 +15,46 @@ static __global__ void trace_ray(uint32_t* d_imgBuff, const glm::uvec2 imgDim, c
 		return;
 	}
 
+	const glm::vec3 rayOrigin = { 0.f, 0.f, 1.f };
+	glm::vec3 rayDirection = glm::normalize(glm::vec3(coord.x, coord.y, -1.f));
+
+	const Sphere* closestSphere = nullptr;
+	glm::vec3 closestShiftOrigin{};
+	float closestT{FLT_MAX};
+
 	for (int i = 0; i < hittableSize; i++) {
-		d_imgBuff[gIndex] = convertFromRGBA(d_hittable[i].hit({0.f, 0.f, -1.f}, coord));
+		// Shifing current camera to the position of given object. It's for the calculation of intersections.
+		glm::vec3 shiftOrigin = rayOrigin - d_hittable[i].getPosition();
+		float t = d_hittable[i].hit(shiftOrigin, rayDirection);
+		if (t < 0.f)
+			continue;
+
+		if (t < closestT) {
+			closestSphere = &d_hittable[i];
+			closestT = t;
+			closestShiftOrigin = shiftOrigin;
+		}
 	}
+
+	if (closestSphere == nullptr) {
+		d_imgBuff[gIndex] = convertFromRGBA({0.f, 0.f, 0.f, 1.f});
+		return;
+	}
+
+	glm::vec3 closestHit = closestT * rayDirection + closestShiftOrigin;
+	glm::vec3 normal = glm::normalize(closestHit); // normal as unit vector of closestHit
+
+	glm::vec3 lightSource = glm::normalize(glm::vec3(1.f, 1.f, -1.f));
+	float lightIntensity = glm::max(glm::dot(normal, -lightSource), 0.f); // only angles: 0 <= d <= 90
+
+	d_imgBuff[gIndex] = convertFromRGBA(
+		{
+			closestSphere->getColor().r * lightIntensity,
+			closestSphere->getColor().g * lightIntensity,
+			closestSphere->getColor().b * lightIntensity,
+			closestSphere->getColor().a 
+		});
+	// d_imgBuff[gIndex] = convertFromRGBA(closestSphere->getColor() * lightIntensity);
 }
 
 
