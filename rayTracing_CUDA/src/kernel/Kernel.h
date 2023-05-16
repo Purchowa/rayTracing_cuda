@@ -1,9 +1,10 @@
 #pragma once
 #include <cuda_runtime.h>
 #include <curand.h>
+#include <device_launch_parameters.h>
 #include <iostream>
 #include <glm/glm.hpp>
-#include <device_launch_parameters.h>
+
 #include "../scene/Scene.h"
 #include "../utils/utils.h"
 
@@ -11,8 +12,8 @@ using std::string;
 
 class Kernel {
 public:
-	Kernel::Kernel();
-	Kernel::~Kernel();
+	Kernel();
+	~Kernel();
 	void setImgDim(glm::uvec2 imgDim);
 	void setBuffer(uint32_t* buffer);
 	void runKernel(Scene& scene);

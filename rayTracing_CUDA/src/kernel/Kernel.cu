@@ -10,22 +10,26 @@ static __global__ void trace_ray(uint32_t* d_imgBuff, const glm::uvec2 imgDim, c
 	}
 	glm::vec2 coord = { ((float)x * 2.f / (float)imgDim.x) - 1.f, ((float)y * 2.f / (float)imgDim.y) - 1.f}; // [-1; 1]
 
+	float grad = 0.5f * (-coord.y + 1.f);
+	glm::vec4 backgroundColor = { (1.f - grad) * glm::vec3(1.f, 1.f, 1.f) + grad * glm::vec3(0.5f, 0.7f, 1.0f), 1.f};
+
 	if (!hittableSize) {
-		d_imgBuff[gIndex] = convertFromRGBA({0.f, 0.f, 0.f, 1.f});
+		d_imgBuff[gIndex] = convertFromRGBA(backgroundColor);
 		return;
 	}
 
-	const glm::vec3 rayOrigin = { 0.f, 0.f, 1.f };
-	glm::vec3 rayDirection = glm::normalize(glm::vec3(coord.x, coord.y, -1.f));
+	Ray ray;
+	ray.origin = { 0.f, 0.f, 1.f };
+	ray.direction = glm::normalize(glm::vec3(coord.x, coord.y, -1.f));
 
 	const Sphere* closestSphere = nullptr;
 	glm::vec3 closestShiftOrigin{};
 	float closestT{FLT_MAX};
 
 	for (int i = 0; i < hittableSize; i++) {
-		// Shifing current camera to the position of given object. It's for the calculation of intersections.
-		glm::vec3 shiftOrigin = rayOrigin - d_hittable[i].getPosition();
-		float t = d_hittable[i].hit(shiftOrigin, rayDirection);
+		// Shifing current camera to the position of given object. It's used for the calculation of intersections.
+		glm::vec3 shiftOrigin = ray.origin - d_hittable[i].getPosition();
+		float t = d_hittable[i].hit({ shiftOrigin, ray.direction });
 		if (t < 0.f)
 			continue;
 
@@ -37,11 +41,11 @@ static __global__ void trace_ray(uint32_t* d_imgBuff, const glm::uvec2 imgDim, c
 	}
 
 	if (closestSphere == nullptr) {
-		d_imgBuff[gIndex] = convertFromRGBA({0.f, 0.f, 0.f, 1.f});
+		d_imgBuff[gIndex] = convertFromRGBA(backgroundColor);
 		return;
 	}
 
-	glm::vec3 closestHit = closestT * rayDirection + closestShiftOrigin;
+	glm::vec3 closestHit = closestT * ray.direction + closestShiftOrigin;
 	glm::vec3 normal = glm::normalize(closestHit); // normal as unit vector of closestHit
 
 	glm::vec3 lightSource = glm::normalize(glm::vec3(1.f, 1.f, -1.f));
@@ -67,6 +71,8 @@ void Kernel::runKernel(Scene& scene) {
 	Sphere* d_hittable = nullptr;
 	uint32_t bufferSize = imgDim.x * imgDim.y;
 	cudaEvent_t start, stop;
+
+	char c{ 11 };
 
 	cudaEventCreate(&start);
 	cudaEventCreate(&stop);
