@@ -1,21 +1,21 @@
 # Ray tracing with CUDA
-Ray tracer. In development.
+Ray tracer that uses GPGPU.
 
 ## Setting up
 Repository doesn't contain any project files.
 They can be created with srcipts/Setup.bat which is set for VisualStudio 2019.
-Building .sln, .vcxproj achived with premake.
+Building project files (.sln, .vcxproj) achived with premake.
 
 VS configuration:
 - VS 2019,
 - C++ 17,
 
 Current CUDA configuration:
-- CUDA Toolkit - 11.8
-- Default compute capability - 5.2
+- CUDA Toolkit - 12.1,
+- Default compute capability - I guess it inherits on its own (mine is 5.2).
 
 ### Note
-Running scripts/Setup.bat will result in generating new .sln file without CUDA configuration. 
+Running scripts/Setup.bat will result in generating new .sln file and configuration in .vcxproj with all CUDA settings.
 
 ### Framework for GUI
 - [Walnut](https://github.com/TheCherno/Walnut)

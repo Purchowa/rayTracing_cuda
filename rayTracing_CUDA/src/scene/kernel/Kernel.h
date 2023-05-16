@@ -5,7 +5,7 @@
 #include <iostream>
 #include <glm/glm.hpp>
 
-#include "../scene/Scene.h"
+#include "../Scene.h"
 #include "../utils/utils.h"
 
 using std::string;

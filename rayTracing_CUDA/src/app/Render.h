@@ -1,5 +1,5 @@
 #pragma once
-#include "../kernel/Kernel.h"
+#include "../scene/kernel/Kernel.h"
 #include "../scene/Scene.h"
 #include "Walnut/Image.h"
 
