@@ -7,7 +7,8 @@
 
 #include "../scene/Scene.h"
 #include "../utils/utils.h"
-
+#include "../camera/Camera.h"
+#include <vector>
 using std::string;
 
 class Kernel {
@@ -16,7 +17,7 @@ public:
 	~Kernel();
 	void setImgDim(glm::uvec2 imgDim);
 	void setBuffer(uint32_t* buffer);
-	void runKernel(Scene& scene);
+	void runKernel(Scene& scene, Camera camera);
 	float getKernelTimeMs();
 
 private:

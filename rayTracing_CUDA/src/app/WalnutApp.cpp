@@ -7,13 +7,18 @@
 #include "Render.h"
 #include <cstring>
 #include <glm/gtc/type_ptr.hpp>
+#include "../camera/Camera.h"
 
 using namespace Walnut;
 
 class MainLayer : public Walnut::Layer {
 public:
-	MainLayer(): render(){
+	MainLayer(): render() {
 		scene.sphere.reserve(5);
+
+	}
+	virtual void OnUpdate(float ts) override {
+		m_camera.OnUpdate(ts);
 	}
 
 	virtual void OnUIRender() override {
@@ -35,7 +40,7 @@ public:
 		// Scene
 		ImGui::Begin("Scene");
 		if (ImGui::Button("+")) {
-			scene.sphere.push_back(Sphere());
+			scene.sphere.emplace_back();
 		}
 		if (!scene.sphere.empty()) {
 			if (ImGui::Button("-")) {
@@ -74,12 +79,16 @@ public:
 private:
 	Render render;
 	Scene scene;
-	uint32_t imageWidth = 0, imageHeight = 0;
+	Camera 	m_camera;
+	uint32_t imageWidth = 0;
+	uint32_t imageHeight = 0;
 	bool realTimeRender = false;
 
 	void renderImage() {
 		render.onResize(imageWidth, imageHeight);
-		render.render(scene);
+		m_camera.OnResize(imageWidth, imageHeight);
+		render.render(scene, m_camera);
+;
 	}
 };
 

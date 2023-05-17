@@ -4,9 +4,9 @@
 Render::Render() {
 }
 
-void Render::render(Scene& scene) {
+void Render::render(Scene& scene, Camera camera) {
 	try {
-		kernel.runKernel(scene);
+		kernel.runKernel(scene, camera);
 		image->SetData(imageBuffer);
 	}
 	catch (const std::invalid_argument& ex) {
