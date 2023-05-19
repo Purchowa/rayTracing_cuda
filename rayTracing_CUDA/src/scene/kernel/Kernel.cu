@@ -48,7 +48,7 @@ static __global__ void trace_ray(
 
 
   if (!hittableSize) {
-    d_imgBuff[gIndex] = convertFromRGBA({0.f, 0.f, 0.f, 1.f});
+    imgBuff[gIndex] = convertFromRGBA({0.f, 0.f, 0.f, 1.f});
     return;
   }
 
@@ -58,8 +58,8 @@ static __global__ void trace_ray(
 
 	for (int i = 0; i < hittableSize; i++) {
 		// Shifing current camera to the position of given object. It's used for the calculation of intersections.
-		glm::vec3 shiftOrigin = ray.origin - d_hittable[i].getPosition();
-		float t = d_hittable[i].hit({ shiftOrigin, ray.direction });
+		glm::vec3 shiftOrigin = ray.origin - hittable[i].getPosition();
+		float t = hittable[i].hit({ shiftOrigin, ray.direction });
 		if (t < 0.f)
 			continue;
 
@@ -95,14 +95,18 @@ static __global__ void trace_ray(
 Kernel::Kernel(): kernelTimeMs(0.f), TPB(16){
 }
 
-void Kernel::runKernel(Scene& scene, Camera camera) {
+void Kernel::runKernel(const Scene& scene, const Camera& camera) {
 	// TODO: Jeœli to bêdzie w pêtli siê odœwie¿a³o to warto nie alokowaæ tego za ka¿dym razem
 	uint32_t* d_buffer = nullptr;
 	Sphere* d_hittable = nullptr;
+	curandStatePhilox4_32_10_t* d_curandState = nullptr;
+	glm::vec3* d_rayDirections = nullptr;
 	uint32_t bufferSize = imgDim.x * imgDim.y;
 	cudaEvent_t start, stop;
 	dim3 gridDim((imgDim.x + TPB - 1) / TPB, (imgDim.y + TPB - 1) / TPB);
 	dim3 blockDim(TPB, TPB);
+
+	std::vector<glm::vec3> rayDirections = camera.GetRayDirections();
 
     cudaEventCreate(&start);
     cudaEventCreate(&stop);
@@ -115,21 +119,28 @@ void Kernel::runKernel(Scene& scene, Camera camera) {
 	gpuErrChk(cudaMalloc(&d_buffer,  bufferSize * sizeof(*d_buffer)));
 	gpuErrChk(cudaMalloc(&d_hittable, scene.sphere.size() * sizeof(*d_hittable)));
 	gpuErrChk(cudaMalloc(&d_curandState, bufferSize * sizeof(*d_curandState)));
-	gpuErrChk(cudaMalloc(&d_vec3, rayDirections.size() * sizeof(glm::vec3)));
+	gpuErrChk(cudaMalloc(&d_rayDirections, rayDirections.size() * sizeof(glm::vec3)));
+
+	cudaEventRecord(start);
 
     gpuErrChk(cudaMemcpy(d_buffer, buffer, bufferSize * sizeof(*d_buffer),
                          cudaMemcpyHostToDevice));
     gpuErrChk(cudaMemcpy(d_hittable, scene.sphere.data(),
                          scene.sphere.size() * sizeof(*d_hittable),
                          cudaMemcpyHostToDevice));
-    gpuErrChk(cudaMemcpyAsync(d_vec3, rayDirections.data(),
+    gpuErrChk(cudaMemcpyAsync(d_rayDirections, rayDirections.data(),
                               rayDirections.size() * sizeof(glm::vec3),
                               cudaMemcpyHostToDevice))
 
-	
+	trace_ray << < gridDim, blockDim >> > (
+		d_buffer,
+		imgDim, d_curandState,
+		d_hittable,
+		scene.sphere.size(),
+		camera.GetPosition(),
+		d_rayDirections,
+		rayDirections.size());
 
-	cudaEventRecord(start);
-	trace_ray << < gridDim, blockDim >> > (d_buffer, imgDim, d_hittable, scene.sphere.size());
 	cudaEventRecord(stop);
 	cudaEventSynchronize(stop);
 	cudaEventElapsedTime(&kernelTimeMs, start, stop);
@@ -141,7 +152,7 @@ void Kernel::runKernel(Scene& scene, Camera camera) {
 	gpuErrChk(cudaFree(d_buffer));
 	gpuErrChk(cudaFree(d_hittable));
 	gpuErrChk(cudaFree(d_curandState));
-	gpuErrChk(cudaFree(d_vec3));
+	gpuErrChk(cudaFree(d_rayDirections));
 }
 
 
@@ -151,4 +162,4 @@ void Kernel::runKernel(Scene& scene, Camera camera) {
 
   void Kernel::setImgDim(glm::uvec2 imgDim) { this->imgDim = imgDim; }
 
-  void Kernel::setBuffer(uint32_t * buffer) { this->buffer = buffer; }
+  void Kernel::setBuffer(uint32_t* buffer) { this->buffer = buffer; }

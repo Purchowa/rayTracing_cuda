@@ -2,7 +2,7 @@
 #include "../scene/kernel/Kernel.h"
 #include "../scene/Scene.h"
 #include "Walnut/Image.h"
-#include "../camera/Camera.h"
+#include "../scene/camera/Camera.h"
 #include <memory>
 
 class Render {

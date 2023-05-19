@@ -7,7 +7,6 @@
 #include "Render.h"
 #include <cstring>
 #include <glm/gtc/type_ptr.hpp>
-#include "../camera/Camera.h"
 
 using namespace Walnut;
 
