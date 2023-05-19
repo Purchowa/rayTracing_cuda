@@ -1,3 +1,5 @@
+require("../premake5-cuda")
+
 project "rayTracing_CUDA"
    kind "ConsoleApp"
    language "C++"
@@ -5,7 +7,18 @@ project "rayTracing_CUDA"
    targetdir "bin/%{cfg.buildcfg}"
    staticruntime "off"
 
-   files {"src/**.h", "src/**.cpp", "src/**.cu"}
+   files {"src/app/**.h", "src/app/**.cpp"}
+
+   -- CUDA configurations
+    buildcustomizations "BuildCustomizations/CUDA 12.1"
+
+    externalwarnings "Off" -- thrust gives a lot of warnings
+    cudaFiles { "src/scene/**.cu", "src/scene/**.cpp", "src/scene/**.h" } -- files to be compiled into binaries
+    -- cudaKeep "On" -- keep temporary output files
+    -- cudaFastMath "On"
+    cudaRelocatableCode "On"
+    -- cudaVerbosePTXAS "On"
+    -- cudaMaxRegCount "32"
 
    includedirs
    {
