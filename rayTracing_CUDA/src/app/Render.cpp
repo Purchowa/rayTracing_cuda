@@ -4,7 +4,7 @@
 Render::Render() {
 }
 
-void Render::render(Scene& scene, Camera camera) {
+void Render::render(Scene& scene, Camera& camera) {
 	try {
 		kernel.runKernel(scene, camera);
 		image->SetData(imageBuffer);

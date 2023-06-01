@@ -9,7 +9,7 @@ class Render {
 public:
 	Render();
 	void onResize(uint32_t nImgWidth, uint32_t nImgHeight);
-	void render(Scene& scene, Camera camera);
+	void render(Scene& scene, Camera& camera);
 	float getRednderTimeMs();
 	std::shared_ptr<Walnut::Image> getFinalImage();
 

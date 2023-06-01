@@ -9,6 +9,8 @@
 #include "../utils/utils.h"
 #include "../camera/Camera.h"
 
+#define ANTIALIASING_SAMPLES 10
+
 using std::string;
 
 class Kernel {

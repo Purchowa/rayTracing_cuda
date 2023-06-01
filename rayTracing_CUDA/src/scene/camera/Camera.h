@@ -1,6 +1,6 @@
 #pragma once
 #include <glm/glm.hpp>
-#include <vector>
+#include <cuda_runtime.h>
 
 
 class Camera
@@ -16,17 +16,17 @@ public:
 	const glm::mat4& GetView() const { return m_View; }
 	const glm::mat4& GetInverseView() const { return m_InverseView; }
 
-	const glm::vec3& GetPosition() const { return m_Position; }
 	const glm::vec3& GetDirection() const { return m_ForwardDirection; }
+	__device__ __host__ const glm::vec3& GetPosition() const { return m_Position; }
 
-	 const std::vector<glm::vec3>& GetRayDirections() const { return m_RayDirections; }
+	__device__ glm::vec3 calculateRayDirection(const glm::vec2& coord) const;
 
 	float GetRotationSpeed();
+
 private:
 	void RecalculateProjection();
 	void RecalculateView();
-	void RecalculateRayDirections();
-private:
+
 	glm::mat4 m_Projection{ 1.0f };
 	glm::mat4 m_View{ 1.0f };
 	glm::mat4 m_InverseProjection{ 1.0f };
@@ -38,9 +38,6 @@ private:
 
 	glm::vec3 m_Position{ 0.0f, 0.0f, 0.0f };
 	glm::vec3 m_ForwardDirection{ 0.0f, 0.0f, 0.0f };
-
-	// Cached ray directions
-	std::vector<glm::vec3> m_RayDirections;
 
 	glm::vec2 m_LastMousePosition{ 0.0f, 0.0f };
 
