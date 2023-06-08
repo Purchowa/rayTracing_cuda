@@ -12,9 +12,10 @@ using namespace Walnut;
 
 class MainLayer : public Walnut::Layer {
 public:
-	MainLayer(): render() {
+	MainLayer() {
 		scene.sphere.reserve(5);
 		scene.sphere.push_back(Sphere({ 0.f, 101.f, -1.f }, { 0.1f, 0.84f, 0.2f, 1.f }, 100.f)); // world
+		// scene.sphere.push_back(Sphere({ -1.f, -1.f, 1.f }, { 1.f, 1.f, 0.f, 1.f}, 0.1f)); // light
 	}
 	virtual void OnUpdate(float ts) override {
 		m_camera.OnUpdate(ts);

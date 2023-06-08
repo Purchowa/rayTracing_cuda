@@ -16,6 +16,7 @@ public:
 	__device__ float hit(const Ray& ray) const;
 	__device__ glm::vec4 getColor() const;
 	__device__ glm::vec3 getPosition() const;
+	__device__ float getRadius() const { return radius; }
 
 	glm::vec3& getPositionRef();
 	float& getRadiusRef();

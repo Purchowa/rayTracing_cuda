@@ -23,7 +23,7 @@ static __device__ glm::vec4 colorRaw(const Ray ray, const Sphere* hittable, cons
 		float t = hittable[i].hit({ shiftOrigin, ray.direction });
 		if (t < 0.f)
 			continue;
-
+		
 		if (t < closestT) {
 			closestSphere = &hittable[i];
 			closestT = t;
@@ -36,18 +36,22 @@ static __device__ glm::vec4 colorRaw(const Ray ray, const Sphere* hittable, cons
 	}
 
 	glm::vec3 closestHit = closestT * ray.direction + closestShiftOrigin;
-	glm::vec3 normal = glm::normalize(closestHit); // normal as unit vector of closestHit
+	
+	HitRecord hitRecord(ray.direction, (closestHit - closestSphere->getPosition()) / closestSphere->getRadius()); // normal as unit vector of closestHit so the light is global
 
 	glm::vec3 lightSource = glm::normalize(glm::vec3(1.f, 1.f, -1.f));
-	float lightIntensity = glm::max(glm::dot(normal, -lightSource), 0.f); // only angles: 0 <= d <= 90
+	float lightIntensity = glm::max(glm::dot(closestHit, -lightSource), 0.f); // only angles: 0 <= d <= 90
+
 	glm::vec4 color = closestSphere->getColor();
 
-	return {
+
+	return glm::vec4(0.5f * (hitRecord.normal + glm::vec3(1.f, 1.f, 1.f) * lightIntensity), 1.f);
+	/*return {
 			color.r * lightIntensity,
 			color.g * lightIntensity,
 			color.b * lightIntensity,
 			color.a
-	};
+	};*/
 }
 
 static __global__ void trace_ray(

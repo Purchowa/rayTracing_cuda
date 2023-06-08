@@ -8,6 +8,7 @@
 #include "../Scene.h"
 #include "../utils/utils.h"
 #include "../camera/Camera.h"
+#include "../hittables/HitRecord.h"
 
 #define ANTIALIASING_SAMPLES 10
 
