@@ -30,6 +30,21 @@ private:
 	uint32_t* buffer = nullptr;
 };
 
+// CUDA specific
+__global__ void initCurand(curandStatePhilox4_32_10_t* states, const glm::uvec2 imgDim);
+
+__global__ void perPixel(uint32_t* imgBuff, const glm::uvec2 imgDim, curandStatePhilox4_32_10_t* rndState, const Sphere* hittable, const uint32_t hittableSize, const Camera* camera);
+
+__device__ HitRecord traceRay(const Ray ray);
+__device__ HitRecord closestHit(const Ray ray, float hitDistance, uint32_t objectIndex);
+__device__ HitRecord Miss(const Ray ray);
+
+__device__ glm::vec3 randomDirection(curandStatePhilox4_32_10_t* rndState, const glm::vec3& origin);
+
+template <int DEPTH = 50>
+__device__ glm::vec4 colorRaw(const Ray ray, const Sphere* hittable, const uint32_t hittableSize, const glm::vec4& backgroundColor, curandStatePhilox4_32_10_t* rndState);
+
+// Errors
 #define gpuErrChk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
 static void gpuAssert(cudaError_t code, const char* file, int line, bool abort = true) {
 	if (code != cudaSuccess) {

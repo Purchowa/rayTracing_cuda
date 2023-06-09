@@ -1,6 +1,7 @@
 #include "Kernel.h"
 
-static __global__ void init_curand(curandStatePhilox4_32_10_t* states, const glm::uvec2 imgDim) {
+__global__ void initCurand(curandStatePhilox4_32_10_t* states, const glm::uvec2 imgDim) 
+{
 	uint32_t x = threadIdx.x + blockIdx.x * blockDim.x;
 	uint32_t y = threadIdx.y + blockIdx.y * blockDim.y;
 	uint32_t gIndex = x + y * blockDim.x * gridDim.x;
@@ -12,40 +13,63 @@ static __global__ void init_curand(curandStatePhilox4_32_10_t* states, const glm
 	// Sequence 0 and offset 0 for better performance but may result in worse 'randomness'
 }
 
-static __device__ glm::vec4 colorRaw(const Ray ray, const Sphere* hittable, const uint32_t hittableSize, const glm::vec4& backgroundColor)
+__device__ glm::vec3 randomDirection(curandStatePhilox4_32_10_t* rndState, const glm::vec3& origin) 
+{
+	auto rndVec3 = [&rndState]() -> glm::vec3 {
+		return glm::vec3(2.f * curand_uniform(rndState) - 1.f);
+	};
+	glm::vec3 randomPoint = rndVec3();
+	while (1.f <= glm::length(randomPoint)) {
+		randomPoint = rndVec3();
+	}
+	return randomPoint;
+}
+
+template <int DEPTH>
+__device__ glm::vec4 colorRaw(const Ray ray, const Sphere* hittable, const uint32_t hittableSize, const glm::vec4& backgroundColor, curandStatePhilox4_32_10_t* rndState)
 {
 	const Sphere* closestSphere = nullptr;
-	glm::vec3 closestShiftOrigin{};
-	float closestT{ FLT_MAX };
-	for (int i = 0; i < hittableSize; i++) {
-		// Shifing current camera to the position of given object. It's used for the calculation of intersections.
-		glm::vec3 shiftOrigin = ray.origin - hittable[i].getPosition();
-		float t = hittable[i].hit({ shiftOrigin, ray.direction });
-		if (t < 0.f)
-			continue;
-		
-		if (t < closestT) {
-			closestSphere = &hittable[i];
-			closestT = t;
-			closestShiftOrigin = shiftOrigin;
+	Ray nRay = ray;
+	float color{ 1.f };
+	float lightIntensity{1.f};
+	int n = DEPTH;
+	do {
+		glm::vec3 closestShiftOrigin{};
+		float closestT{ FLT_MAX };
+		for (int i = 0; i < hittableSize; i++) {
+			// Shifing current camera to the position of given object. It's used for the calculation of intersections.
+			glm::vec3 shiftOrigin = nRay.origin - hittable[i].getPosition();
+			float t = hittable[i].hit({ shiftOrigin, nRay.direction });
+			if (t < 0.f)
+				continue;
+
+			if (t < closestT) {
+				closestSphere = &hittable[i];
+				closestT = t;
+				closestShiftOrigin = shiftOrigin;
+			}
 		}
-	}
 
-	if (closestSphere == nullptr) {
-		return backgroundColor;
-	}
+		if (closestSphere == nullptr) {
+			return color * backgroundColor;
+		}
 
-	glm::vec3 closestHit = closestT * ray.direction + closestShiftOrigin;
-	
-	HitRecord hitRecord(ray.direction, (closestHit - closestSphere->getPosition()) / closestSphere->getRadius()); // normal as unit vector of closestHit so the light is global
+		glm::vec3 closestHit = closestT * nRay.direction + closestShiftOrigin;
 
-	glm::vec3 lightSource = glm::normalize(glm::vec3(1.f, 1.f, -1.f));
-	float lightIntensity = glm::max(glm::dot(closestHit, -lightSource), 0.f); // only angles: 0 <= d <= 90
+		HitRecord hitRecord(nRay.direction, (closestHit - closestSphere->getPosition()) / closestSphere->getRadius()); // normal as unit vector of closestHit so the light is global
 
-	glm::vec4 color = closestSphere->getColor();
+		color *= 0.5f;
+		nRay.origin = closestHit;
+		glm::vec3 target = hitRecord.normal + randomDirection(rndState, closestHit);
+		nRay.direction = target;
+		closestSphere = nullptr;
 
+		//glm::vec3 lightSource = glm::normalize(glm::vec3(1.f, 1.f, -1.f));
+		//lightIntensity = glm::max(glm::dot(closestHit, -lightSource), 0.f); // only angles: 0 <= d <= 90
 
-	return glm::vec4(0.5f * (hitRecord.normal + glm::vec3(1.f, 1.f, 1.f) * lightIntensity), 1.f);
+	} while (0 < n--);
+
+	return glm::vec4(0.f, 0.f, 0.f, 1.f);
 	/*return {
 			color.r * lightIntensity,
 			color.g * lightIntensity,
@@ -54,7 +78,7 @@ static __device__ glm::vec4 colorRaw(const Ray ray, const Sphere* hittable, cons
 	};*/
 }
 
-static __global__ void trace_ray(
+__global__ void perPixel(
 	uint32_t* imgBuff,
 	const glm::uvec2 imgDim,
 	curandStatePhilox4_32_10_t* rndState,
@@ -91,12 +115,27 @@ static __global__ void trace_ray(
 			( (y + curand_uniform(&rndState[gIndex])) * 2.f ) / float(imgDim.y) - 1.f};
 
 		ray.direction = glm::normalize(camera->calculateRayDirection(rndCoord));
-		sumColor += colorRaw(ray, hittable, hittableSize, backgroundColor);
+		sumColor += colorRaw(ray, hittable, hittableSize, backgroundColor, &rndState[gIndex]);
 	}
 	
 	glm::vec4 color = sumColor / (float)ANTIALIASING_SAMPLES;
 	imgBuff[gIndex] = convertFromRGBA(color);
 }
+
+//__device__ HitRecord traceRay(const Ray ray)
+//{
+//	return __device__ HitRecord();
+//}
+//
+//__device__ HitRecord closestHit(const Ray ray, float hitDistance, uint32_t objectIndex)
+//{
+//	return __device__ HitRecord();
+//}
+//
+//__device__ HitRecord Miss(const Ray ray)
+//{
+//	return __device__ HitRecord();
+//}
 
 
 Kernel::Kernel(): kernelTimeMs(0.f), TPB(16){
@@ -138,7 +177,7 @@ void Kernel::runKernel(const Scene& scene, const Camera& camera) {
                               sizeof(*d_camera),
                               cudaMemcpyHostToDevice))
 
-	trace_ray << < gridDim, blockDim >> > (
+	perPixel << < gridDim, blockDim >> > (
 		d_buffer,
 		imgDim, d_curandState,
 		d_hittable,

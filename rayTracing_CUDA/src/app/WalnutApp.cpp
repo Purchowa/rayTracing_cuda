@@ -47,7 +47,7 @@ public:
 				scene.sphere.pop_back();
 			}
 		}
-		for (int i = 1; i < scene.sphere.size(); i++) {
+		for (int i = 0; i < scene.sphere.size(); i++) {
 			ImGui::PushID(i);
 			ImGui::Text("Sphere %d", i);
 			ImGui::DragFloat3("Postition", glm::value_ptr(scene.sphere[i].getPositionRef()), 0.05f); // glm::value_ptr is same as &..getPositionRef.x
