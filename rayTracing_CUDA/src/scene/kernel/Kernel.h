@@ -4,13 +4,14 @@
 #include <curand_kernel.h>
 #include <iostream>
 #include <glm/glm.hpp>
+#include <chrono>
 
 #include "../Scene.h"
 #include "../utils/utils.h"
 #include "../camera/Camera.h"
 #include "../hittables/HitRecord.h"
 
-#define ANTIALIASING_SAMPLES 10
+#define ANTIALIASING_SAMPLES 1
 
 using std::string;
 
@@ -31,18 +32,17 @@ private:
 };
 
 // CUDA specific
-__global__ void initCurand(curandStatePhilox4_32_10_t* states, const glm::uvec2 imgDim);
+__global__ void initCurand(curandStatePhilox4_32_10_t* states, const glm::uvec2 imgDim, const size_t seed);
 
 __global__ void perPixel(uint32_t* imgBuff, const glm::uvec2 imgDim, curandStatePhilox4_32_10_t* rndState, const Sphere* hittable, const uint32_t hittableSize, const Camera* camera);
-
+__device__ glm::vec3 randomDirectionUnitSphere(curandStatePhilox4_32_10_t* rndState);
 __device__ HitRecord traceRay(const Ray ray, const Sphere* hittable, const uint32_t hittableSize);
 __device__ HitRecord closestHit(const Ray ray, float hitDistance, int objectIndex, const Sphere* hittable);
 __device__ HitRecord miss(const Ray ray);
 
-__device__ glm::vec3 randomDirection(curandStatePhilox4_32_10_t* rndState, const glm::vec3& origin);
 
-template <int DEPTH = 50>
-__device__ glm::vec4 colorRaw(const Ray ray, const Sphere* hittable, const uint32_t hittableSize, const glm::vec4& backgroundColor, curandStatePhilox4_32_10_t* rndState);
+// template <int DEPTH = 50>
+// __device__ glm::vec4 colorRaw(const Ray ray, const Sphere* hittable, const uint32_t hittableSize, const glm::vec4& backgroundColor, curandStatePhilox4_32_10_t* rndState);
 
 // Errors
 #define gpuErrChk(ans) { gpuAssert((ans), __FILE__, __LINE__); }

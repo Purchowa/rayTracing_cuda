@@ -1,6 +1,6 @@
 #include "Kernel.h"
 
-__global__ void initCurand(curandStatePhilox4_32_10_t* states, const glm::uvec2 imgDim) 
+__global__ void initCurand(curandStatePhilox4_32_10_t* states, const glm::uvec2 imgDim, const size_t seed)
 {
 	uint32_t x = threadIdx.x + blockIdx.x * blockDim.x;
 	uint32_t y = threadIdx.y + blockIdx.y * blockDim.y;
@@ -9,11 +9,11 @@ __global__ void initCurand(curandStatePhilox4_32_10_t* states, const glm::uvec2 
 	if (imgDim.x <= x || imgDim.y <= y || imgDim.x * imgDim.y <= gIndex) {
 		return;
 	}
-	curand_init((size_t)gIndex, 0, 0, &states[gIndex]);
+	curand_init(seed, (size_t)gIndex, 0, &states[gIndex]);
 	// Sequence 0 and offset 0 for better performance but may result in worse 'randomness'
 }
 
-__device__ glm::vec3 randomDirection(curandStatePhilox4_32_10_t* rndState, const glm::vec3& origin) 
+__device__ glm::vec3 randomDirectionUnitSphere(curandStatePhilox4_32_10_t* rndState) 
 {
 	auto rndVec3 = [&rndState]() -> glm::vec3 {
 		return glm::vec3(2.f * curand_uniform(rndState) - 1.f);
@@ -47,11 +47,6 @@ __device__ HitRecord traceRay(const Ray ray, const Sphere* hittable, const uint3
 	if (closestObjIdx < 0) {
 		return miss(ray);
 	}
-
-	// glm::vec3 closestHit = closestT * ray.direction + shiftOrigin;
-
-	// HitRecord hitRecord(ray.direction, (closestHit - closestSphere->getPosition()) / closestSphere->getRadius()); // normal as unit vector of closestHit so the light is global
-	// HitRecord hitRecord(ray.direction, (closestHit - hittable[closestObjIdx].getPosition()) / hittable[closestObjIdx].getRadius(), closestHit, closestT, closestObjIdx );
 	return closestHit(ray, closestT, closestObjIdx, hittable);
 }
 
@@ -134,6 +129,7 @@ __global__ void perPixel(
 	const glm::uvec2 imgDim,
 	curandStatePhilox4_32_10_t* rndState,
 	const Sphere* hittable,
+	const Material* material,
 	const uint32_t hittableSize,
 	const Camera* camera) {
 
@@ -149,42 +145,45 @@ __global__ void perPixel(
 
 	float grad = 0.5f * (-coord.y + 1.f);
 	glm::vec4 backgroundColor = {(1.f - grad) * glm::vec3(1.f, 1.f, 1.f) + grad * glm::vec3(0.5f, 0.7f, 1.0f), 1.f};
+	// backgroundColor = glm::vec4(0.f, 0.f, 0.f, 1.f);
 
 	if (!hittableSize) {
 		imgBuff[gIndex] = convertFromRGBA(backgroundColor);
 		return;
 	}
 
+	const int BOUNCES = 20;
 	Ray ray;
 	HitRecord hitRecord;
-	glm::vec3 lightSource = glm::normalize(glm::vec3(1.f, -1.f, -1.f));
+	glm::vec3 lightSource = glm::normalize(glm::vec3(-1.f, -1.f, -1.f));
 	glm::vec4 sumColor{};
 
 	ray.origin = camera->GetPosition();
-
+	
 	for (int i = 0; i < ANTIALIASING_SAMPLES; i++) {
 		glm::vec2 rndCoord{
 			( (x + curand_uniform(&rndState[gIndex])) * 2.f ) / float(imgDim.x) - 1.f,
 			( (y + curand_uniform(&rndState[gIndex])) * 2.f ) / float(imgDim.y) - 1.f};
 
-		ray.direction = camera->calculateRayDirection(rndCoord);
-
-		hitRecord = traceRay(ray, hittable, hittableSize);
-		if (hitRecord.distance < 0.f) { // Didn't hit any hittable
-			// imgBuff[gIndex] = convertFromRGBA(backgroundColor);
-			sumColor += backgroundColor;
-			// continue;
+		ray.direction = camera->calculateRayDirection(coord);
+		float multiplier = 1.f;
+		for (int j = 0; j < BOUNCES; j++){
+			hitRecord = traceRay(ray, hittable, hittableSize);
+			if (hitRecord.distance < 0.f) { // Didn't hit any hittable
+				sumColor += backgroundColor * multiplier;
+				break;
+			}
+			else {
+				float lightIntensity = glm::max(glm::dot(hitRecord.normal, -lightSource), 0.f); // only angles: 0 <= d <= 90
+				sumColor += material[hittable[hitRecord.objectIndex].getMaterialIdx()].color * lightIntensity * multiplier;
+				multiplier *= 0.5f;
+			}
+			ray.origin = hitRecord.position + hitRecord.normal * 0.0001f;
+			ray.direction = glm::reflect(ray.direction, hitRecord.normal + material[hittable[hitRecord.objectIndex].getMaterialIdx()].roughness * (randomDirectionUnitSphere(&rndState[gIndex])));
+			// ray.direction = hitRecord.normal + randomDirectionUnitSphere(&rndState[gIndex]);
 		}
-		else {
-			float lightIntensity = glm::max(glm::dot(hitRecord.normal, -lightSource), 0.f); // only angles: 0 <= d <= 90
-			sumColor += hittable[hitRecord.objectIndex].getColor() * lightIntensity;
-		}
-			
 	}
 	
-	
-	
-
 	glm::vec4 color = sumColor / (float)ANTIALIASING_SAMPLES;
 	imgBuff[gIndex] = convertFromRGBA(glm::vec4(
 					color.r,
@@ -202,10 +201,10 @@ void Kernel::runKernel(const Scene& scene, const Camera& camera) {
 	// TODO: Jeœli to bêdzie w pêtli siê odœwie¿a³o to warto nie alokowaæ tego za ka¿dym razem
 	uint32_t* d_buffer = nullptr;
 	Sphere* d_hittable = nullptr;
+	Material* d_material = nullptr;
 	Camera* d_camera = nullptr;
 	curandStatePhilox4_32_10_t* d_curandState = nullptr;
 	cudaEvent_t start, stop;
-
 	uint32_t bufferSize = imgDim.x * imgDim.y;
 	dim3 gridDim((imgDim.x + TPB - 1) / TPB, (imgDim.y + TPB - 1) / TPB);
 	dim3 blockDim(TPB, TPB);
@@ -220,16 +219,20 @@ void Kernel::runKernel(const Scene& scene, const Camera& camera) {
 
 	gpuErrChk(cudaMalloc(&d_buffer,  bufferSize * sizeof(*d_buffer)));
 	gpuErrChk(cudaMalloc(&d_hittable, scene.sphere.size() * sizeof(*d_hittable)));
+	gpuErrChk(cudaMalloc(&d_material, scene.material.size() * sizeof(*d_material)));
 	gpuErrChk(cudaMalloc(&d_curandState, bufferSize * sizeof(*d_curandState)));
 	gpuErrChk(cudaMalloc(&d_camera, sizeof(*d_camera)));
-
 	cudaEventRecord(start);
 
-    gpuErrChk(cudaMemcpy(d_buffer, buffer, bufferSize * sizeof(*d_buffer),
-                         cudaMemcpyHostToDevice));
+	auto duration = std::chrono::system_clock::now().time_since_epoch();
+	initCurand << < gridDim, blockDim >> > (d_curandState, imgDim, size_t(duration.count()));
+
     gpuErrChk(cudaMemcpy(d_hittable, scene.sphere.data(),
                          scene.sphere.size() * sizeof(*d_hittable),
                          cudaMemcpyHostToDevice));
+	gpuErrChk(cudaMemcpy(d_material, scene.material.data(), 
+						 scene.material.size() * sizeof(*d_material),
+						 cudaMemcpyHostToDevice));
     gpuErrChk(cudaMemcpy(d_camera, &camera,
                               sizeof(*d_camera),
                               cudaMemcpyHostToDevice))
@@ -238,6 +241,7 @@ void Kernel::runKernel(const Scene& scene, const Camera& camera) {
 		d_buffer,
 		imgDim, d_curandState,
 		d_hittable,
+		d_material,
 		scene.sphere.size(),
 		d_camera);
 

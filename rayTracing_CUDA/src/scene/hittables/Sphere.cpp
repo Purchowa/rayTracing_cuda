@@ -1,9 +1,9 @@
 #include "Sphere.h"
 
-__device__ __host__ Sphere::Sphere() : Hittable({ 0.f, 0.f, -1.f }, {0.5f, 0.5, 0.f, 1.f}), radius(0.5f)
+__device__ __host__ Sphere::Sphere() : Hittable({ 0.f, 0.f, -1.f }, 0), radius(0.5f)
 {}
 
-__device__ __host__ Sphere::Sphere(const glm::vec3& center, const glm::vec4& color, const float radius): Hittable(center, color), radius(radius)
+__device__ __host__ Sphere::Sphere(const glm::vec3& center, const float radius, const int matIndex): Hittable(center, matIndex), radius(radius)
 {}
 
 __device__ float Sphere::hit(const Ray& ray) const {
@@ -19,28 +19,5 @@ __device__ float Sphere::hit(const Ray& ray) const {
 		return (float)Hit::NO_HIT;
 	}
 	return t1;
-}
-
-__device__ glm::vec4 Sphere::getColor() const {
-	return color;
-}
-
-__device__ glm::vec3 Sphere::getPosition() const
-{
-	return position;
-}
-
-glm::vec3& Sphere::getPositionRef()
-{
-	return position;
-}
-
-float& Sphere::getRadiusRef()
-{
-	return radius;
-}
-
-glm::vec4& Sphere::getColorRef() {
-	return color;
 }
 
