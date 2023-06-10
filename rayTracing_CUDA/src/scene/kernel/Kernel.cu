@@ -25,58 +25,109 @@ __device__ glm::vec3 randomDirection(curandStatePhilox4_32_10_t* rndState, const
 	return randomPoint;
 }
 
-template <int DEPTH>
-__device__ glm::vec4 colorRaw(const Ray ray, const Sphere* hittable, const uint32_t hittableSize, const glm::vec4& backgroundColor, curandStatePhilox4_32_10_t* rndState)
+__device__ HitRecord traceRay(const Ray ray, const Sphere* hittable, const uint32_t hittableSize)
 {
-	const Sphere* closestSphere = nullptr;
-	Ray nRay = ray;
-	float color{ 1.f };
-	float lightIntensity{1.f};
-	int n = DEPTH;
-	do {
-		glm::vec3 closestShiftOrigin{};
-		float closestT{ FLT_MAX };
-		for (int i = 0; i < hittableSize; i++) {
-			// Shifing current camera to the position of given object. It's used for the calculation of intersections.
-			glm::vec3 shiftOrigin = nRay.origin - hittable[i].getPosition();
-			float t = hittable[i].hit({ shiftOrigin, nRay.direction });
-			if (t < 0.f)
-				continue;
+	int closestObjIdx = -1;
+	float closestT{ FLT_MAX };
+	glm::vec3 shiftOrigin{};
 
-			if (t < closestT) {
-				closestSphere = &hittable[i];
-				closestT = t;
-				closestShiftOrigin = shiftOrigin;
-			}
+	for (int i = 0; i < hittableSize; i++) {
+		// Shifing current camera to the position of given object. It's used for the calculation of intersections.
+		shiftOrigin = ray.origin - hittable[i].getPosition();
+		float t = hittable[i].hit({ shiftOrigin, ray.direction });
+		if (t < 0.f)
+			continue;
+
+		if (t < closestT) {
+			closestObjIdx = i;
+			closestT = t;
 		}
+	}
 
-		if (closestSphere == nullptr) {
-			return color * backgroundColor;
-		}
+	if (closestObjIdx < 0) {
+		return miss(ray);
+	}
 
-		glm::vec3 closestHit = closestT * nRay.direction + closestShiftOrigin;
+	// glm::vec3 closestHit = closestT * ray.direction + shiftOrigin;
 
-		HitRecord hitRecord(nRay.direction, (closestHit - closestSphere->getPosition()) / closestSphere->getRadius()); // normal as unit vector of closestHit so the light is global
-
-		color *= 0.5f;
-		nRay.origin = closestHit;
-		glm::vec3 target = hitRecord.normal + randomDirection(rndState, closestHit);
-		nRay.direction = target;
-		closestSphere = nullptr;
-
-		//glm::vec3 lightSource = glm::normalize(glm::vec3(1.f, 1.f, -1.f));
-		//lightIntensity = glm::max(glm::dot(closestHit, -lightSource), 0.f); // only angles: 0 <= d <= 90
-
-	} while (0 < n--);
-
-	return glm::vec4(0.f, 0.f, 0.f, 1.f);
-	/*return {
-			color.r * lightIntensity,
-			color.g * lightIntensity,
-			color.b * lightIntensity,
-			color.a
-	};*/
+	// HitRecord hitRecord(ray.direction, (closestHit - closestSphere->getPosition()) / closestSphere->getRadius()); // normal as unit vector of closestHit so the light is global
+	// HitRecord hitRecord(ray.direction, (closestHit - hittable[closestObjIdx].getPosition()) / hittable[closestObjIdx].getRadius(), closestHit, closestT, closestObjIdx );
+	return closestHit(ray, closestT, closestObjIdx, hittable);
 }
+
+
+__device__ HitRecord closestHit(const Ray ray, float hitDistance, int objectIndex, const Sphere* hittable)
+{
+	const Sphere& closestSphere = hittable[objectIndex];
+	glm::vec3 origin = ray.origin - closestSphere.getPosition(); // Move back to the origin
+	
+	glm::vec3 hitPoint = origin + ray.direction * hitDistance;
+	glm::vec3 normal = glm::normalize(hitPoint);
+
+	hitPoint += closestSphere.getPosition(); // Move into real position
+
+	HitRecord hitRecord(ray.direction, normal, hitPoint, hitDistance, objectIndex);
+	return hitRecord;
+}
+
+
+__device__ HitRecord miss(const Ray ray)
+{
+	return HitRecord();
+}
+
+//template <int DEPTH>
+//__device__ glm::vec4 colorRaw(const Ray ray, const Sphere* hittable, const uint32_t hittableSize, const glm::vec4& backgroundColor, curandStatePhilox4_32_10_t* rndState)
+//{
+//	const Sphere* closestSphere = nullptr;
+//	Ray nRay = ray;
+//	float color{ 1.f };
+//	float lightIntensity{1.f};
+//	int n = DEPTH;
+//	do {
+//		glm::vec3 closestShiftOrigin{};
+//		float closestT{ FLT_MAX };
+//		for (int i = 0; i < hittableSize; i++) {
+//			// Shifing current camera to the position of given object. It's used for the calculation of intersections.
+//			glm::vec3 shiftOrigin = nRay.origin - hittable[i].getPosition();
+//			float t = hittable[i].hit({ shiftOrigin, nRay.direction });
+//			if (t < 0.f)
+//				continue;
+//
+//			if (t < closestT) {
+//				closestSphere = &hittable[i];
+//				closestT = t;
+//				closestShiftOrigin = shiftOrigin;
+//			}
+//		}
+//
+//		if (closestSphere == nullptr) {
+//			return color * backgroundColor;
+//		}
+//
+//		glm::vec3 closestHit = closestT * nRay.direction + closestShiftOrigin;
+//
+//		//HitRecord hitRecord(nRay.direction, (closestHit - closestSphere->getPosition()) / closestSphere->getRadius()); // normal as unit vector of closestHit so the light is global
+//
+//		color *= 0.5f;
+//		nRay.origin = closestHit;
+//		glm::vec3 target = hitRecord.normal + randomDirection(rndState, closestHit);
+//		nRay.direction = target;
+//		closestSphere = nullptr;
+//
+//		//glm::vec3 lightSource = glm::normalize(glm::vec3(1.f, 1.f, -1.f));
+//		//lightIntensity = glm::max(glm::dot(closestHit, -lightSource), 0.f); // only angles: 0 <= d <= 90
+//
+//	} while (0 < n--);
+//
+//	return glm::vec4(0.f, 0.f, 0.f, 1.f);
+//	/*return {
+//			color.r * lightIntensity,
+//			color.g * lightIntensity,
+//			color.b * lightIntensity,
+//			color.a
+//	};*/
+//}
 
 __global__ void perPixel(
 	uint32_t* imgBuff,
@@ -97,9 +148,7 @@ __global__ void perPixel(
 						((float)y * 2.f / (float)imgDim.y) - 1.f}; // [-1; 1]
 
 	float grad = 0.5f * (-coord.y + 1.f);
-	glm::vec4 backgroundColor = {(1.f - grad) * glm::vec3(1.f, 1.f, 1.f) +
-									grad * glm::vec3(0.5f, 0.7f, 1.0f),
-								1.f};
+	glm::vec4 backgroundColor = {(1.f - grad) * glm::vec3(1.f, 1.f, 1.f) + grad * glm::vec3(0.5f, 0.7f, 1.0f), 1.f};
 
 	if (!hittableSize) {
 		imgBuff[gIndex] = convertFromRGBA(backgroundColor);
@@ -107,35 +156,43 @@ __global__ void perPixel(
 	}
 
 	Ray ray;
-	ray.origin = camera->GetPosition();
+	HitRecord hitRecord;
+	glm::vec3 lightSource = glm::normalize(glm::vec3(1.f, -1.f, -1.f));
 	glm::vec4 sumColor{};
+
+	ray.origin = camera->GetPosition();
+
 	for (int i = 0; i < ANTIALIASING_SAMPLES; i++) {
 		glm::vec2 rndCoord{
 			( (x + curand_uniform(&rndState[gIndex])) * 2.f ) / float(imgDim.x) - 1.f,
 			( (y + curand_uniform(&rndState[gIndex])) * 2.f ) / float(imgDim.y) - 1.f};
 
-		ray.direction = glm::normalize(camera->calculateRayDirection(rndCoord));
-		sumColor += colorRaw(ray, hittable, hittableSize, backgroundColor, &rndState[gIndex]);
+		ray.direction = camera->calculateRayDirection(rndCoord);
+
+		hitRecord = traceRay(ray, hittable, hittableSize);
+		if (hitRecord.distance < 0.f) { // Didn't hit any hittable
+			// imgBuff[gIndex] = convertFromRGBA(backgroundColor);
+			sumColor += backgroundColor;
+			// continue;
+		}
+		else {
+			float lightIntensity = glm::max(glm::dot(hitRecord.normal, -lightSource), 0.f); // only angles: 0 <= d <= 90
+			sumColor += hittable[hitRecord.objectIndex].getColor() * lightIntensity;
+		}
+			
 	}
 	
-	glm::vec4 color = sumColor / (float)ANTIALIASING_SAMPLES;
-	imgBuff[gIndex] = convertFromRGBA(color);
-}
+	
+	
 
-//__device__ HitRecord traceRay(const Ray ray)
-//{
-//	return __device__ HitRecord();
-//}
-//
-//__device__ HitRecord closestHit(const Ray ray, float hitDistance, uint32_t objectIndex)
-//{
-//	return __device__ HitRecord();
-//}
-//
-//__device__ HitRecord Miss(const Ray ray)
-//{
-//	return __device__ HitRecord();
-//}
+	glm::vec4 color = sumColor / (float)ANTIALIASING_SAMPLES;
+	imgBuff[gIndex] = convertFromRGBA(glm::vec4(
+					color.r,
+					color.g,
+					color.b,
+					1.f
+			));
+}
 
 
 Kernel::Kernel(): kernelTimeMs(0.f), TPB(16){

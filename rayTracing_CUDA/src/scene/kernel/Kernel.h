@@ -35,9 +35,9 @@ __global__ void initCurand(curandStatePhilox4_32_10_t* states, const glm::uvec2 
 
 __global__ void perPixel(uint32_t* imgBuff, const glm::uvec2 imgDim, curandStatePhilox4_32_10_t* rndState, const Sphere* hittable, const uint32_t hittableSize, const Camera* camera);
 
-__device__ HitRecord traceRay(const Ray ray);
-__device__ HitRecord closestHit(const Ray ray, float hitDistance, uint32_t objectIndex);
-__device__ HitRecord Miss(const Ray ray);
+__device__ HitRecord traceRay(const Ray ray, const Sphere* hittable, const uint32_t hittableSize);
+__device__ HitRecord closestHit(const Ray ray, float hitDistance, int objectIndex, const Sphere* hittable);
+__device__ HitRecord miss(const Ray ray);
 
 __device__ glm::vec3 randomDirection(curandStatePhilox4_32_10_t* rndState, const glm::vec3& origin);
 

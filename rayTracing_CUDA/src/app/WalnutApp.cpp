@@ -14,7 +14,7 @@ class MainLayer : public Walnut::Layer {
 public:
 	MainLayer() {
 		scene.sphere.reserve(5);
-		scene.sphere.push_back(Sphere({ 0.f, 101.f, -1.f }, { 0.1f, 0.84f, 0.2f, 1.f }, 100.f)); // world
+		scene.sphere.push_back(Sphere({ 0.f, -101.f, -1.f }, { 0.1f, 0.84f, 0.2f, 1.f }, 100.f)); // world
 		// scene.sphere.push_back(Sphere({ -1.f, -1.f, 1.f }, { 1.f, 1.f, 0.f, 1.f}, 0.1f)); // light
 	}
 	virtual void OnUpdate(float ts) override {
@@ -47,10 +47,10 @@ public:
 				scene.sphere.pop_back();
 			}
 		}
-		for (int i = 0; i < scene.sphere.size(); i++) {
+		for (int i = 1; i < scene.sphere.size(); i++) {
 			ImGui::PushID(i);
 			ImGui::Text("Sphere %d", i);
-			ImGui::DragFloat3("Postition", glm::value_ptr(scene.sphere[i].getPositionRef()), 0.05f); // glm::value_ptr is same as &..getPositionRef.x
+			ImGui::DragFloat3("Position", glm::value_ptr(scene.sphere[i].getPositionRef()), 0.05f); // glm::value_ptr is same as &..getPositionRef.x
 			ImGui::DragFloat("Radius", &scene.sphere[i].getRadiusRef(), 0.01f);
 			ImGui::ColorEdit4("Color", glm::value_ptr(scene.sphere[i].getColorRef()));
 			ImGui::Separator();
