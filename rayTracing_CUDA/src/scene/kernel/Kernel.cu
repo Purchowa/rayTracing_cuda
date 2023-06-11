@@ -158,7 +158,7 @@ __global__ void perPixel(
 	Ray ray;
 	HitRecord hitRecord;
 	glm::vec3 lightSource = glm::normalize(glm::vec3(-1.f, -1.f, -1.f));
-	glm::vec4 sumColor{};
+	glm::vec4 light{0.0f, 0.0f, 0.0f, 0.0f};
 
 	ray.origin = camera->GetPosition();
 	
@@ -168,24 +168,28 @@ __global__ void perPixel(
 			( (y + curand_uniform(&rndState[gIndex])) * 2.f ) / float(imgDim.y) - 1.f};
 
 		ray.direction = camera->calculateRayDirection(coord);
-		float multiplier = 1.f;
+		glm::vec3 contribution = { 1.0f, 1.0f, 1.0f};
 		for (int j = 0; j < BOUNCES; j++){
 			hitRecord = traceRay(ray, hittable, hittableSize);
 			if (hitRecord.distance < 0.f) { // Didn't hit any hittable
-				sumColor += backgroundColor * multiplier;
+				light += backgroundColor * glm::vec4(contribution, 1.0f);
 				break;
 			}
 			else {
 				float lightIntensity = glm::max(glm::dot(hitRecord.normal, -lightSource), 0.f); // only angles: 0 <= d <= 90
-				sumColor += material[hittable[hitRecord.objectIndex].getMaterialIdx()].color * multiplier * lightIntensity; // light intensity might be optional
-				multiplier *= 0.5f;
+				
+				contribution *= glm::vec3( material[hittable[hitRecord.objectIndex].getMaterialIdx()].color.r, material[hittable[hitRecord.objectIndex].getMaterialIdx()].color.g, material[hittable[hitRecord.objectIndex].getMaterialIdx()].color.b);
+				//light += material[hittable[hitRecord.objectIndex].getMaterialIdx()].color * glm::vec4(contribution, 1.0f) * lightIntensity; // light intensity might be optional
+				//light += material[hittable[hitRecord.objectIndex].getMaterialIdx()].color * glm::vec4(contribution, 1.0f) * glm::vec4(material[hittable[hitRecord.objectIndex].getMaterialIdx()].GetEmmision(), 1.0f) * lightIntensity;
+				light +=   glm::vec4(material[hittable[hitRecord.objectIndex].getMaterialIdx()].GetEmmision(), 1.0f) ;
+
 			}
 			ray.origin = hitRecord.position + hitRecord.normal * 0.0001f;
 			ray.direction = glm::reflect(ray.direction, hitRecord.normal + material[hittable[hitRecord.objectIndex].getMaterialIdx()].roughness * (randomDirectionUnitSphere(&rndState[gIndex])));
 			// ray.direction = hitRecord.normal + randomDirectionUnitSphere(&rndState[gIndex]);
 		}
 	}
-	glm::vec4 color = sumColor / (float)ANTIALIASING_SAMPLES;
+	glm::vec4 color = light / (float)ANTIALIASING_SAMPLES;
 
 	uint32_t& buff = imgBuff[gIndex];
 	glm::vec4& acc = accColor[gIndex];
