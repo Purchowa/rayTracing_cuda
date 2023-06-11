@@ -6,7 +6,7 @@ Render::Render() {
 
 void Render::render(Scene& scene, Camera& camera) {
 	try {
-		kernel.runKernel(scene, camera);
+		kernel.runKernel(scene, camera, settings);
 		image->SetData(imageBuffer);
 	}
 	catch (const std::invalid_argument& ex) {

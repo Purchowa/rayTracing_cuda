@@ -18,6 +18,8 @@ public:
 	__device__ float getRadius() const { return radius; }
 	__device__ int getMaterialIdx() const { return materialIndex; };
 
+	void setMaterialIdx(int val) { materialIndex = val; };
+
 	glm::vec3& getPositionRef() { return position; };
 	float& getRadiusRef() { return radius; };
 	int& getMaterialIdRef() { return materialIndex; };

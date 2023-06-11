@@ -1,13 +1,11 @@
 #pragma once
+#include <memory>
+#include "Walnut/Image.h"
+
 #include "../scene/kernel/Kernel.h"
 #include "../scene/Scene.h"
-#include "Walnut/Image.h"
 #include "../scene/camera/Camera.h"
-#include <memory>
-
-struct Settings {
-	bool accumulate{ false };
-};
+#include "Settings.h"
 
 class Render {
 public:
@@ -16,10 +14,9 @@ public:
 	void render(Scene& scene, Camera& camera);
 	float getRednderTimeMs();
 	std::shared_ptr<Walnut::Image> getFinalImage();
+	Settings& getSettingsRef() { return settings; };
 	~Render();
 private:
-	
-
 	Kernel kernel;
 	uint32_t imageWidth = 0;
 	uint32_t imageHeight = 0;

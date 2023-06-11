@@ -10,6 +10,7 @@
 #include "../utils/utils.h"
 #include "../camera/Camera.h"
 #include "../hittables/HitRecord.h"
+#include "../../app/Settings.h"
 
 #define ANTIALIASING_SAMPLES 1
 
@@ -21,7 +22,7 @@ public:
 	~Kernel();
 	void setImgDim(glm::uvec2 imgDim);
 	void setBuffer(uint32_t* buffer, glm::vec4* accColor);
-	void runKernel(const Scene& scene, const Camera& camera);
+	void runKernel(const Scene& scene, const Camera& camera, const Settings settings);
 	float getKernelTimeMs();
 
 	uint32_t getAccN() const { return accN; }

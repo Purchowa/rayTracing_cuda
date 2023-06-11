@@ -177,7 +177,7 @@ __global__ void perPixel(
 			}
 			else {
 				float lightIntensity = glm::max(glm::dot(hitRecord.normal, -lightSource), 0.f); // only angles: 0 <= d <= 90
-				sumColor += material[hittable[hitRecord.objectIndex].getMaterialIdx()].color * multiplier; // light intensity might be optional
+				sumColor += material[hittable[hitRecord.objectIndex].getMaterialIdx()].color * multiplier * lightIntensity; // light intensity might be optional
 				multiplier *= 0.5f;
 			}
 			ray.origin = hitRecord.position + hitRecord.normal * 0.0001f;
@@ -192,7 +192,7 @@ __global__ void perPixel(
 
 	glm::vec4 currAcc{acc};
 
-	if (camera->Moved()) {
+	if (accN <= 1) {
 		acc = glm::vec4(
 			color.r,
 			color.g,
@@ -214,7 +214,7 @@ __global__ void perPixel(
 Kernel::Kernel(): kernelTimeMs(0.f), TPB(16){
 }
 
-void Kernel::runKernel(const Scene& scene, const Camera& camera) {
+void Kernel::runKernel(const Scene& scene, const Camera& camera, const Settings settings) {
 	// TODO: Jeœli to bêdzie w pêtli siê odœwie¿a³o to warto nie alokowaæ tego za ka¿dym razem
 	uint32_t* d_buffer = nullptr;
 	glm::vec4* d_accColor = nullptr;
@@ -264,10 +264,10 @@ void Kernel::runKernel(const Scene& scene, const Camera& camera) {
 		cudaMemcpyHostToDevice))
 
 
-		if (!camera.Moved())
-			accN++;
-		else
-			accN = 1;
+	if (camera.Moved() || !settings.accumulate)
+		accN = 1;
+	else
+		accN++;
 
 	perPixel << < gridDim, blockDim >> > (
 		d_buffer,
