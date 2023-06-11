@@ -22,6 +22,7 @@ public:
 	__device__ glm::vec3 calculateRayDirection(const glm::vec2& coord) const;
 
 	float GetRotationSpeed();
+	__device__ __host__ bool Moved() const { return moved; }
 
 private:
 	void RecalculateProjection();
@@ -42,4 +43,6 @@ private:
 	glm::vec2 m_LastMousePosition{ 0.0f, 0.0f };
 
 	uint32_t m_ViewportWidth = 0, m_ViewportHeight = 0;
+
+	bool moved{ false };
 };

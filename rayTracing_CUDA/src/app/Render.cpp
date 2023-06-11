@@ -27,7 +27,7 @@ void Render::onResize(uint32_t width, uint32_t height) {
 	}
 	reallocateImageBuffer(width, height);
 	kernel.setImgDim({ width, height });
-	kernel.setBuffer(imageBuffer);
+	kernel.setBuffer(imageBuffer, accColor);
 }
 
 float Render::getRednderTimeMs()
@@ -42,12 +42,18 @@ std::shared_ptr<Walnut::Image> Render::getFinalImage()
 
 Render::~Render() {
 	delete[] imageBuffer;
+	delete[] accColor;
 
 	imageBuffer = nullptr;
+	accColor = nullptr;
 }
 
 void Render::reallocateImageBuffer(uint32_t x, uint32_t y)
 {
 	delete[] imageBuffer;
+	delete[] accColor;
 	imageBuffer = new uint32_t[x * (size_t)y];
+	accColor = new glm::vec4[x * (size_t)y];
+	std::memset(accColor, 0, sizeof(*accColor) * (x * (size_t)y));
+	std::memset(imageBuffer, 0, sizeof(*imageBuffer) * (x * (size_t)y));
 }

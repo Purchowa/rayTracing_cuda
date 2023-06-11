@@ -14,8 +14,8 @@ class MainLayer : public Walnut::Layer {
 public:
 	MainLayer() {
 		scene.material.reserve(5);
-		scene.material.emplace_back(Material({ 0.8f, 0.8f, 0.0f, 1.f }, 1.f, 0.f));
-		scene.material.emplace_back(Material({ 0.7, 0.3, 0.3, 1.f }, 1.f, 0.f));
+		scene.material.emplace_back(Material({ 0.1f, 0.1f, 0.1f, 1.f }, 1.f, 0.f));
+		scene.material.emplace_back(Material({ 3.f, 4.f, 0.f, 1.f }, 0.6f, 0.f));
 		scene.material.emplace_back(Material({ 0.6, 0.6, 0.6, 1.f }, 0.0f, 0.f));
 
 		scene.sphere.reserve(5);
@@ -44,7 +44,8 @@ public:
 		ImGui::End();
 
 		// Scene
-		ImGui::Begin("Scene");
+		ImGui::Begin("Objects");
+
 		if (ImGui::Button("+")) {
 			scene.sphere.emplace_back();
 		}
@@ -53,7 +54,7 @@ public:
 				scene.sphere.pop_back();
 			}
 		}
-		for (int i = 0; i < scene.sphere.size(); i++) {
+		for (int i = 1; i < scene.sphere.size(); i++) {
 			ImGui::PushID(i);
 			ImGui::Text("Sphere %d", i);
 			ImGui::DragFloat3("Position", glm::value_ptr(scene.sphere[i].getPositionRef()), 0.05f); // glm::value_ptr is same as &..getPositionRef.x
@@ -62,8 +63,17 @@ public:
 			ImGui::Separator();
 			ImGui::PopID();
 		}
+		ImGui::End();
 
-		ImGui::Separator();
+		ImGui::Begin("Materials");
+		if (ImGui::Button("+")) {
+			scene.material.emplace_back();
+		}
+		if (1 < scene.material.size()) {
+			if (ImGui::Button("-")) {
+				scene.material.pop_back();
+			}
+		}
 
 		for (int i = 0; i < scene.material.size(); i++) {
 			ImGui::PushID(i);
@@ -73,6 +83,7 @@ public:
 			ImGui::Separator();
 			ImGui::PopID();
 		}
+
 		ImGui::End();
 
 		// Viewport

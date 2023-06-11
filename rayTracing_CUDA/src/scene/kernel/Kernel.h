@@ -20,21 +20,25 @@ public:
 	Kernel();
 	~Kernel();
 	void setImgDim(glm::uvec2 imgDim);
-	void setBuffer(uint32_t* buffer);
+	void setBuffer(uint32_t* buffer, glm::vec4* accColor);
 	void runKernel(const Scene& scene, const Camera& camera);
 	float getKernelTimeMs();
 
+	uint32_t getAccN() const { return accN; }
+	void setAccN(uint32_t val) { accN = val; }
 private:
 	const uint32_t TPB;
 	float kernelTimeMs;
 	glm::uvec2 imgDim{ 0, 0 };
 	uint32_t* buffer = nullptr;
+	glm::vec4* accColor = nullptr;
+	uint32_t accN = 1;
 };
 
 // CUDA specific
 __global__ void initCurand(curandStatePhilox4_32_10_t* states, const glm::uvec2 imgDim, const size_t seed);
 
-__global__ void perPixel(uint32_t* imgBuff, const glm::uvec2 imgDim, curandStatePhilox4_32_10_t* rndState, const Sphere* hittable, const uint32_t hittableSize, const Camera* camera);
+__global__ void perPixel(uint32_t* imgBuff, glm::vec4 *accColor, const glm::uvec2 imgDim, curandStatePhilox4_32_10_t* rndState, const Sphere* hittable, const uint32_t hittableSize, const Material* material, const Camera* camera, const uint32_t accN);
 __device__ glm::vec3 randomDirectionUnitSphere(curandStatePhilox4_32_10_t* rndState);
 __device__ HitRecord traceRay(const Ray ray, const Sphere* hittable, const uint32_t hittableSize);
 __device__ HitRecord closestHit(const Ray ray, float hitDistance, int objectIndex, const Sphere* hittable);

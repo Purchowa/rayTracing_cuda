@@ -36,7 +36,7 @@ void Camera::OnUpdate(float ts)
 
 	Input::SetCursorMode(CursorMode::Locked);
 
-	bool moved = false;
+	moved = false;
 
 	const glm::vec3 upDirection(0.0f, 1.0f, 0.0f);
 	glm::vec3 rightDirection = glm::cross(m_ForwardDirection, upDirection);
