@@ -13,9 +13,15 @@ using namespace Walnut;
 class MainLayer : public Walnut::Layer {
 public:
 	MainLayer() {
+		scene.material.reserve(5);
+		scene.material.emplace_back(Material({ 0.1f, 0.1f, 0.1f, 1.f }, 1.f, 0.f));
+		scene.material.emplace_back(Material({ 3.f, 4.f, 0.f, 1.f }, 0.6f, 0.f));
+		scene.material.emplace_back(Material({ 0.6, 0.6, 0.6, 1.f }, 0.0f, 0.f));
+
 		scene.sphere.reserve(5);
-		scene.sphere.push_back(Sphere({ 0.f, 101.f, -1.f }, { 0.1f, 0.84f, 0.2f, 1.f }, 100.f)); // world
-		// scene.sphere.push_back(Sphere({ -1.f, -1.f, 1.f }, { 1.f, 1.f, 0.f, 1.f}, 0.1f)); // light
+		scene.sphere.emplace_back(Sphere({ 0.f, -100.5f, -1.f }, 100.f, 0)); // world
+		scene.sphere.emplace_back(Sphere({ 0.f, 0.f, -1.f }, 0.5f, 1));
+		scene.sphere.emplace_back(Sphere({ -1.2f, 0.4f, -1.f }, 0.6f, 2));
 	}
 	virtual void OnUpdate(float ts) override {
 		m_camera.OnUpdate(ts);
@@ -38,7 +44,8 @@ public:
 		ImGui::End();
 
 		// Scene
-		ImGui::Begin("Scene");
+		ImGui::Begin("Objects");
+
 		if (ImGui::Button("+")) {
 			scene.sphere.emplace_back();
 		}
@@ -50,12 +57,33 @@ public:
 		for (int i = 1; i < scene.sphere.size(); i++) {
 			ImGui::PushID(i);
 			ImGui::Text("Sphere %d", i);
-			ImGui::DragFloat3("Postition", glm::value_ptr(scene.sphere[i].getPositionRef()), 0.05f); // glm::value_ptr is same as &..getPositionRef.x
-			ImGui::DragFloat("Radius", &scene.sphere[i].getRadiusRef(), 0.01f);
-			ImGui::ColorEdit4("Color", glm::value_ptr(scene.sphere[i].getColorRef()));
+			ImGui::DragFloat3("Position", glm::value_ptr(scene.sphere[i].getPositionRef()), 0.05f); // glm::value_ptr is same as &..getPositionRef.x
+			ImGui::DragFloat("Radius", &scene.sphere[i].getRadiusRef(), 0.05f, 0.f, FLT_MAX);
+			ImGui::DragInt("Material id", &scene.sphere[i].getMaterialIdRef(), 1.f, 0, scene.sphere.size() - 1);
 			ImGui::Separator();
 			ImGui::PopID();
 		}
+		ImGui::End();
+
+		ImGui::Begin("Materials");
+		if (ImGui::Button("+")) {
+			scene.material.emplace_back();
+		}
+		if (1 < scene.material.size()) {
+			if (ImGui::Button("-")) {
+				scene.material.pop_back();
+			}
+		}
+
+		for (int i = 0; i < scene.material.size(); i++) {
+			ImGui::PushID(i);
+			ImGui::Text("Material %d", i);
+			ImGui::ColorEdit4("Color", glm::value_ptr(scene.material[i].color));
+			ImGui::DragFloat("Roughness", &scene.material[i].roughness, 0.01f, 0.f, 1.f);
+			ImGui::Separator();
+			ImGui::PopID();
+		}
+
 		ImGui::End();
 
 		// Viewport
