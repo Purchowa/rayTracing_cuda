@@ -181,7 +181,7 @@ __global__ void perPixel(
 				contribution *= glm::vec3( material[hittable[hitRecord.objectIndex].getMaterialIdx()].color.r, material[hittable[hitRecord.objectIndex].getMaterialIdx()].color.g, material[hittable[hitRecord.objectIndex].getMaterialIdx()].color.b);
 				//light += material[hittable[hitRecord.objectIndex].getMaterialIdx()].color * glm::vec4(contribution, 1.0f) * lightIntensity; // light intensity might be optional
 				//light += material[hittable[hitRecord.objectIndex].getMaterialIdx()].color * glm::vec4(contribution, 1.0f) * glm::vec4(material[hittable[hitRecord.objectIndex].getMaterialIdx()].GetEmmision(), 1.0f) * lightIntensity;
-				light +=   glm::vec4(material[hittable[hitRecord.objectIndex].getMaterialIdx()].GetEmmision(), 1.0f) ;
+				light += material[hittable[hitRecord.objectIndex].getMaterialIdx()].color *  glm::vec4(material[hittable[hitRecord.objectIndex].getMaterialIdx()].GetEmmision(), 1.0f) ;
 
 			}
 			ray.origin = hitRecord.position + hitRecord.normal * 0.0001f;

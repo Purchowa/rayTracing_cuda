@@ -15,7 +15,7 @@ public:
 	MainLayer() {
 		scene.material.reserve(5);
 		scene.material.emplace_back(Material({ 0.1f, 0.1f, 0.1f, 1.f }, 1.f, 0.f, { 0.1f, 0.1f, 0.1f }, 10.0f));
-		scene.material.emplace_back(Material({ 0.3f, 0.4f, 0.f, 1.f }, 0.6f, 0.f, { 0.3f, 0.4f, 0.f }, 15.0f));
+		scene.material.emplace_back(Material({ 0.3f, 0.4f, 0.f, 1.f }, 0.6f, 0.f, { 0.3f, 0.4f, 0.f }, 2.0f));
 		scene.material.emplace_back(Material({ 0.6, 0.6, 0.6, 1.f }, 0.0f, 0.f, { 0.6, 0.6, 0.6 }, 2.0f));
 
 		scene.sphere.reserve(5);
