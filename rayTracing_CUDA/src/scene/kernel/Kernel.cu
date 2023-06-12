@@ -158,7 +158,7 @@ __global__ void perPixel(
 	Ray ray;
 	HitRecord hitRecord;
 	glm::vec3 lightSource = glm::normalize(glm::vec3(-1.f, -1.f, -1.f));
-	glm::vec4 light{0.0f, 0.0f, 0.0f, 0.0f};
+	glm::vec4 light{0.0f, 0.0f, 0.0f, 1.f};
 
 	ray.origin = camera->GetPosition();
 	
@@ -171,6 +171,9 @@ __global__ void perPixel(
 		glm::vec3 contribution = { 1.0f, 1.0f, 1.0f};
 		for (int j = 0; j < BOUNCES; j++){
 			hitRecord = traceRay(ray, hittable, hittableSize);
+			const Sphere* sphere = &hittable[hitRecord.objectIndex];
+			const Material* mat = &material[sphere->getMaterialIdx()];
+
 			if (hitRecord.distance < 0.f) { // Didn't hit any hittable
 				light += backgroundColor * glm::vec4(contribution, 1.0f);
 				break;
@@ -178,14 +181,14 @@ __global__ void perPixel(
 			else {
 				float lightIntensity = glm::max(glm::dot(hitRecord.normal, -lightSource), 0.f); // only angles: 0 <= d <= 90
 				
-				contribution *= glm::vec3( material[hittable[hitRecord.objectIndex].getMaterialIdx()].color.r, material[hittable[hitRecord.objectIndex].getMaterialIdx()].color.g, material[hittable[hitRecord.objectIndex].getMaterialIdx()].color.b);
-				//light += material[hittable[hitRecord.objectIndex].getMaterialIdx()].color * glm::vec4(contribution, 1.0f) * lightIntensity; // light intensity might be optional
-				//light += material[hittable[hitRecord.objectIndex].getMaterialIdx()].color * glm::vec4(contribution, 1.0f) * glm::vec4(material[hittable[hitRecord.objectIndex].getMaterialIdx()].GetEmmision(), 1.0f) * lightIntensity;
-				light += material[hittable[hitRecord.objectIndex].getMaterialIdx()].color *  glm::vec4(material[hittable[hitRecord.objectIndex].getMaterialIdx()].GetEmmision(), 1.0f) ;
+				contribution *= glm::vec3(mat->color.r, mat->color.g, mat->color.b);
+				//light += material->color * glm::vec4(contribution, 1.0f) * lightIntensity; // light intensity might be optional
+				//light += material->color * glm::vec4(contribution, 1.0f) * glm::vec4(material->getEmmision(), 1.0f) * lightIntensity;
+				light +=  glm::vec4(mat->getEmmision(), 1.0f);
 
 			}
 			ray.origin = hitRecord.position + hitRecord.normal * 0.0001f;
-			ray.direction = glm::reflect(ray.direction, hitRecord.normal + material[hittable[hitRecord.objectIndex].getMaterialIdx()].roughness * (randomDirectionUnitSphere(&rndState[gIndex])));
+			ray.direction = glm::reflect(glm::normalize(ray.direction), hitRecord.normal) + mat->roughness * (randomDirectionUnitSphere(&rndState[gIndex]));
 			// ray.direction = hitRecord.normal + randomDirectionUnitSphere(&rndState[gIndex]);
 		}
 	}

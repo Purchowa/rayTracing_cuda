@@ -14,9 +14,9 @@ class MainLayer : public Walnut::Layer {
 public:
 	MainLayer() {
 		scene.material.reserve(5);
-		scene.material.emplace_back(Material({ 0.1f, 0.1f, 0.1f, 1.f }, 1.f, 0.f, { 0.1f, 0.1f, 0.1f }, 10.0f));
-		scene.material.emplace_back(Material({ 0.3f, 0.4f, 0.f, 1.f }, 0.6f, 0.f, { 0.3f, 0.4f, 0.f }, 2.0f));
-		scene.material.emplace_back(Material({ 0.6, 0.6, 0.6, 1.f }, 0.0f, 0.f, { 0.6, 0.6, 0.6 }, 2.0f));
+		scene.material.emplace_back(Material({ 0.1f, 0.1f, 0.1f, 1.f }, 1.f, 0.f, 1.f));
+		scene.material.emplace_back(Material({ 0.3f, 0.4f, 0.f, 1.f }, 0.6f, 0.f, 1.f));
+		scene.material.emplace_back(Material({ 0.6, 0.6, 0.6, 1.f }, 0.0f, 0.f, 1.f));
 
 		scene.sphere.reserve(5);
 		scene.sphere.emplace_back(Sphere({ 0.f, -100.5f, -1.f }, 100.f, 0)); // world
@@ -97,7 +97,6 @@ public:
 				ImGui::Text("Material %d", i);
 			ImGui::ColorEdit4("Color", glm::value_ptr(scene.material[i].color));
 			ImGui::DragFloat("Roughness", &scene.material[i].roughness, 0.01f, 0.f, 1.f);
-			ImGui::ColorEdit3("Emmision Color", glm::value_ptr(scene.material[i].emmisionColor));
 			ImGui::DragFloat("Emmision Power", &scene.material[i].emmisionPower, 0.05f, 0.0f, FLT_MAX);
 			ImGui::Separator();
 			ImGui::PopID();

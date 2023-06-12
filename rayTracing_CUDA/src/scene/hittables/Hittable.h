@@ -7,17 +7,15 @@ struct Material {
     glm::vec4 color;
     float roughness;
     float metalic;
-    glm::vec3 emmisionColor;
     float emmisionPower;
 
-    Material(glm::vec4 color, float roughness, float metalic,
-        glm::vec3 emmissionColor, float emmissionPower)
+    Material(glm::vec4 color, float roughness, float metalic, float emmissionPower)
         : color(color), roughness(roughness), metalic(metalic),
-        emmisionColor(emmissionColor), emmisionPower(emmissionPower) {}
+          emmisionPower(emmissionPower) {}
 
-    Material() : color(0.5f), roughness(0.f), metalic(0.f), emmisionColor({ 0.0f, 0.0f, 0.0f }), emmisionPower(0.0f) {}
+    Material() : color(0.5f), roughness(0.f), metalic(0.f), emmisionPower(0.0f) {}
 
-    __device__ __host__ glm::vec3 GetEmmision() const { return emmisionColor * emmisionPower; }
+    __device__ __host__ glm::vec3 getEmmision() const { return color * emmisionPower; }
 };
 
 class Hittable {
