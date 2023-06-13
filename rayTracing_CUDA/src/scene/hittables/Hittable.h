@@ -3,11 +3,16 @@
 #include "Ray.h"
 
 struct Material {
-	glm::vec4 color;
+	glm::vec3 color;
 	float roughness;
+	float emission;
 
-	Material(glm::vec4 color, float roughness): color(color), roughness(roughness){};
-	Material() : color(0.5f), roughness(0.f){};
+	Material(glm::vec3 color, float roughness, float emission): color(color), roughness(roughness), emission(emission){};
+	Material() : color(0.5f), roughness(0.f), emission(0.f){};
+
+	__device__ glm::vec3 getEmissionPower() const {
+		return color * emission;
+	}
 };
 
 class Hittable {

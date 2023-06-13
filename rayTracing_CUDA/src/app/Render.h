@@ -21,7 +21,7 @@ private:
 	uint32_t imageWidth = 0;
 	uint32_t imageHeight = 0;
 	uint32_t* imageBuffer = nullptr;
-	glm::vec4* accColor = nullptr;
+	glm::vec3* accColor = nullptr;
 	std::shared_ptr<Walnut::Image> image;
 
 	Settings settings;

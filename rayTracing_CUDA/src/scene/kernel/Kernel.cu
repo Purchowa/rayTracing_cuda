@@ -16,7 +16,7 @@ __global__ void initCurand(curandStatePhilox4_32_10_t* states, const glm::uvec2 
 __device__ glm::vec3 randomDirectionUnitSphere(curandStatePhilox4_32_10_t* rndState) 
 {
 	auto rndVec3 = [&rndState]() -> glm::vec3 {
-		return glm::vec3(2.f * curand_uniform(rndState) - 1.f);
+		return 2.f * glm::vec3(curand_uniform(rndState), curand_uniform(rndState), curand_uniform(rndState)) - 1.f;
 	};
 	glm::vec3 randomPoint = rndVec3();
 	while (1.f <= glm::length(randomPoint)) {
@@ -70,70 +70,17 @@ __device__ HitRecord miss(const Ray ray)
 {
 	return HitRecord();
 }
-
-//template <int DEPTH>
-//__device__ glm::vec4 colorRaw(const Ray ray, const Sphere* hittable, const uint32_t hittableSize, const glm::vec4& backgroundColor, curandStatePhilox4_32_10_t* rndState)
-//{
-//	const Sphere* closestSphere = nullptr;
-//	Ray nRay = ray;
-//	float color{ 1.f };
-//	float lightIntensity{1.f};
-//	int n = DEPTH;
-//	do {
-//		glm::vec3 closestShiftOrigin{};
-//		float closestT{ FLT_MAX };
-//		for (int i = 0; i < hittableSize; i++) {
-//			// Shifing current camera to the position of given object. It's used for the calculation of intersections.
-//			glm::vec3 shiftOrigin = nRay.origin - hittable[i].getPosition();
-//			float t = hittable[i].hit({ shiftOrigin, nRay.direction });
-//			if (t < 0.f)
-//				continue;
-//
-//			if (t < closestT) {
-//				closestSphere = &hittable[i];
-//				closestT = t;
-//				closestShiftOrigin = shiftOrigin;
-//			}
-//		}
-//
-//		if (closestSphere == nullptr) {
-//			return color * backgroundColor;
-//		}
-//
-//		glm::vec3 closestHit = closestT * nRay.direction + closestShiftOrigin;
-//
-//		//HitRecord hitRecord(nRay.direction, (closestHit - closestSphere->getPosition()) / closestSphere->getRadius()); // normal as unit vector of closestHit so the light is global
-//
-//		color *= 0.5f;
-//		nRay.origin = closestHit;
-//		glm::vec3 target = hitRecord.normal + randomDirection(rndState, closestHit);
-//		nRay.direction = target;
-//		closestSphere = nullptr;
-//
-//		//glm::vec3 lightSource = glm::normalize(glm::vec3(1.f, 1.f, -1.f));
-//		//lightIntensity = glm::max(glm::dot(closestHit, -lightSource), 0.f); // only angles: 0 <= d <= 90
-//
-//	} while (0 < n--);
-//
-//	return glm::vec4(0.f, 0.f, 0.f, 1.f);
-//	/*return {
-//			color.r * lightIntensity,
-//			color.g * lightIntensity,
-//			color.b * lightIntensity,
-//			color.a
-//	};*/
-//}
-
+template <int ANTIALIASING_SAMPLES, int RAY_BOUNCE_COUNT>
 __global__ void perPixel(
 	uint32_t* imgBuff,
-	glm::vec4* accColor,
+	glm::vec3* accColor,
+	const uint32_t accSampleNum,
 	const glm::uvec2 imgDim,
 	curandStatePhilox4_32_10_t* rndState,
 	const Sphere* hittable,
 	const uint32_t hittableSize,
 	const Material* material,
-	const Camera* camera,
-	const uint32_t accN) {
+	const Camera* camera) {
 
 	uint32_t x = threadIdx.x + blockIdx.x * blockDim.x;
 	uint32_t y = threadIdx.y + blockIdx.y * blockDim.y;
@@ -146,19 +93,18 @@ __global__ void perPixel(
 						((float)y * 2.f / (float)imgDim.y) - 1.f}; // [-1; 1]
 
 	float grad = 0.5f * (-coord.y + 1.f);
-	glm::vec4 backgroundColor = {(1.f - grad) * glm::vec3(1.f, 1.f, 1.f) + grad * glm::vec3(0.5, 0.7, 1.0), 1.f};
+	glm::vec3 backgroundColor = {(1.f - grad) * glm::vec3(1.f, 1.f, 1.f) + grad * glm::vec3(0.3, 0.4, 0.5)};
 	// backgroundColor = glm::vec4(0.f, 0.f, 0.f, 1.f);
 
 	if (!hittableSize) {
-		imgBuff[gIndex] = convertFromRGBA(backgroundColor);
+		imgBuff[gIndex] = convertFromRGBA(glm::vec4(backgroundColor, 1.f));
 		return;
 	}
 
-	const int BOUNCES = 5;
 	Ray ray;
 	HitRecord hitRecord;
-	glm::vec3 lightSource = glm::normalize(glm::vec3(-1.f, -1.f, -1.f));
-	glm::vec4 sumColor{};
+	glm::vec3 light{0.f};
+	glm::vec3 attenuation{ 1.f };
 
 	ray.origin = camera->GetPosition();
 	
@@ -167,47 +113,35 @@ __global__ void perPixel(
 			( (x + curand_uniform(&rndState[gIndex])) * 2.f ) / float(imgDim.x) - 1.f,
 			( (y + curand_uniform(&rndState[gIndex])) * 2.f ) / float(imgDim.y) - 1.f};
 
-		ray.direction = camera->calculateRayDirection(coord);
-		float multiplier = 1.f;
-		for (int j = 0; j < BOUNCES; j++){
+		ray.direction = camera->calculateRayDirection(rndCoord);
+		for (int j = 0; j < RAY_BOUNCE_COUNT; j++){
 			hitRecord = traceRay(ray, hittable, hittableSize);
 			const Sphere* sphere = &hittable[hitRecord.objectIndex];
 			const Material* mat = &material[sphere->getMaterialIdx()];
 
 			if (hitRecord.distance < 0.f) { // Didn't hit any hittable
-				sumColor += backgroundColor * multiplier;
+				light += backgroundColor * attenuation;
 				break;
 			}
+			light += mat->getEmissionPower();
+			attenuation *= mat->color;
+
 			ray.origin = hitRecord.position + hitRecord.normal * 0.0001f;
-			
-			glm::vec3 reflectRay = glm::reflect(ray.direction, hitRecord.normal);
-			ray.direction = reflectRay + mat->roughness * (randomDirectionUnitSphere(&rndState[gIndex]));
-			
-			sumColor += mat->color * multiplier;
-			multiplier *= 0.5f;
+			ray.direction = hitRecord.normal + mat->roughness * randomDirectionUnitSphere(&rndState[gIndex]);
 		}
 	}
-	glm::vec4 color = sumColor / (float)ANTIALIASING_SAMPLES;
+	glm::vec3 color = light / (float)ANTIALIASING_SAMPLES;
 
 	uint32_t& buff = imgBuff[gIndex];
-	glm::vec4& acc = accColor[gIndex];
+	glm::vec3& acc = accColor[gIndex];
+	glm::vec3 currAcc{acc};
 
-	glm::vec4 currAcc{acc};
-
-	if (accN <= 1) {
-		acc = glm::vec4(
-			color.r,
-			color.g,
-			color.b,
-			1.f);
+	if (accSampleNum <= 1) {
+		acc = color;
 	}
 	else {
-		acc += glm::vec4(
-			color.r,
-			color.g,
-			color.b,
-			1.f);
-		currAcc = acc / glm::vec4(accN);
+		acc += color;
+		currAcc = acc / glm::vec3(accSampleNum);
 	}
 	buff = convertFromRGBA(currAcc);
 }
@@ -217,9 +151,8 @@ Kernel::Kernel(): kernelTimeMs(0.f), TPB(16){
 }
 
 void Kernel::runKernel(const Scene& scene, const Camera& camera, const Settings settings) {
-	// TODO: Jeœli to bêdzie w pêtli siê odœwie¿a³o to warto nie alokowaæ tego za ka¿dym razem
 	uint32_t* d_buffer = nullptr;
-	glm::vec4* d_accColor = nullptr;
+	glm::vec3* d_accColor = nullptr;
 	Sphere* d_hittable = nullptr;
 	Material* d_material = nullptr;
 	Camera* d_camera = nullptr;
@@ -267,19 +200,19 @@ void Kernel::runKernel(const Scene& scene, const Camera& camera, const Settings 
 
 
 	if (camera.Moved() || !settings.accumulate)
-		accN = 1;
+		accSampleNum = 1;
 	else
-		accN++;
+		accSampleNum++;
 
-	perPixel << < gridDim, blockDim >> > (
+	perPixel<ANTIALIASING_SAMPLES, RAY_BOUNCE_COUNT> << < gridDim, blockDim >> > (
 		d_buffer,
 		d_accColor,
+		accSampleNum,
 		imgDim, d_curandState,
 		d_hittable,
 		scene.sphere.size(),
 		d_material,
-		d_camera,
-		accN);
+		d_camera);
 
 	cudaEventRecord(stop);
 	cudaEventSynchronize(stop);
@@ -307,7 +240,7 @@ void Kernel::runKernel(const Scene& scene, const Camera& camera, const Settings 
 
   void Kernel::setImgDim(glm::uvec2 imgDim) { this->imgDim = imgDim; }
 
-  void Kernel::setBuffer(uint32_t* buffer, glm::vec4* accColor) {
+  void Kernel::setBuffer(uint32_t* buffer, glm::vec3* accColor) {
 	  this->buffer = buffer;
 	  this->accColor = accColor;
   }
