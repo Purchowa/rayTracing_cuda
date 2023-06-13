@@ -48,6 +48,7 @@ public:
    * @return A shared pointer to the final rendered image.
    */
   std::shared_ptr<Walnut::Image> getFinalImage();
+  
   Settings &getSettingsRef() { return settings; };
 
   /**
