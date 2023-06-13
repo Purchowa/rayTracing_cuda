@@ -146,7 +146,7 @@ __global__ void perPixel(
 						((float)y * 2.f / (float)imgDim.y) - 1.f}; // [-1; 1]
 
 	float grad = 0.5f * (-coord.y + 1.f);
-	glm::vec4 backgroundColor = {(1.f - grad) * glm::vec3(1.f, 1.f, 1.f) + grad * glm::vec3(0.4f, 0.6f, 0.8f), 1.f};
+	glm::vec4 backgroundColor = {(1.f - grad) * glm::vec3(1.f, 1.f, 1.f) + grad * glm::vec3(0.5, 0.7, 1.0), 1.f};
 	// backgroundColor = glm::vec4(0.f, 0.f, 0.f, 1.f);
 
 	if (!hittableSize) {
@@ -154,7 +154,7 @@ __global__ void perPixel(
 		return;
 	}
 
-	const int BOUNCES = 30;
+	const int BOUNCES = 5;
 	Ray ray;
 	HitRecord hitRecord;
 	glm::vec3 lightSource = glm::normalize(glm::vec3(-1.f, -1.f, -1.f));
@@ -171,18 +171,20 @@ __global__ void perPixel(
 		float multiplier = 1.f;
 		for (int j = 0; j < BOUNCES; j++){
 			hitRecord = traceRay(ray, hittable, hittableSize);
+			const Sphere* sphere = &hittable[hitRecord.objectIndex];
+			const Material* mat = &material[sphere->getMaterialIdx()];
+
 			if (hitRecord.distance < 0.f) { // Didn't hit any hittable
 				sumColor += backgroundColor * multiplier;
 				break;
 			}
-			else {
-				float lightIntensity = glm::max(glm::dot(hitRecord.normal, -lightSource), 0.f); // only angles: 0 <= d <= 90
-				sumColor += material[hittable[hitRecord.objectIndex].getMaterialIdx()].color * multiplier * lightIntensity; // light intensity might be optional
-				multiplier *= 0.5f;
-			}
 			ray.origin = hitRecord.position + hitRecord.normal * 0.0001f;
-			ray.direction = glm::reflect(ray.direction, hitRecord.normal + material[hittable[hitRecord.objectIndex].getMaterialIdx()].roughness * (randomDirectionUnitSphere(&rndState[gIndex])));
-			// ray.direction = hitRecord.normal + randomDirectionUnitSphere(&rndState[gIndex]);
+			
+			glm::vec3 reflectRay = glm::reflect(ray.direction, hitRecord.normal);
+			ray.direction = reflectRay + mat->roughness * (randomDirectionUnitSphere(&rndState[gIndex]));
+			
+			sumColor += mat->color * multiplier;
+			multiplier *= 0.5f;
 		}
 	}
 	glm::vec4 color = sumColor / (float)ANTIALIASING_SAMPLES;

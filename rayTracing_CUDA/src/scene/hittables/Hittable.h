@@ -5,10 +5,9 @@
 struct Material {
 	glm::vec4 color;
 	float roughness;
-	float metalic;
 
-	Material(glm::vec4 color, float roughness, float metalic): color(color), roughness(roughness), metalic(metalic){};
-	Material() : color(0.5f), roughness(0.f), metalic(0.f) {};
+	Material(glm::vec4 color, float roughness): color(color), roughness(roughness){};
+	Material() : color(0.5f), roughness(0.f){};
 };
 
 class Hittable {

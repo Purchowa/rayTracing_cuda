@@ -11,3 +11,12 @@ __device__ uint32_t convertFromRGBA(const glm::vec4& color) // converts unsigned
 		| ((uint32_t)(colorClmp.g * 255.f) << 8)
 		| ((uint32_t)(colorClmp.r * 255.f)));
 }
+
+__device__ bool nearZero(glm::vec3 ray)
+{
+	const auto eps = 1e-7;
+	if (fabs(ray.x) < eps && fabs(ray.y) < eps && fabs(ray.z) < eps) {
+		return true;
+	}
+	return false;
+}
