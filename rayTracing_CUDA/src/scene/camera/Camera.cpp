@@ -36,7 +36,7 @@ void Camera::OnUpdate(float ts)
 
 	Input::SetCursorMode(CursorMode::Locked);
 
-	bool moved = false;
+	moved = false;
 
 	const glm::vec3 upDirection(0.0f, 1.0f, 0.0f);
 	glm::vec3 rightDirection = glm::cross(m_ForwardDirection, upDirection);
@@ -126,5 +126,5 @@ __device__ glm::vec3 Camera::calculateRayDirection(const glm::vec2& coord) const
 {
 	glm::vec4 target = m_InverseProjection * glm::vec4(coord.x, coord.y, 1, 1);
 	glm::vec3 rayDirection = glm::vec3(m_InverseView * glm::vec4(glm::normalize(glm::vec3(target) / target.w), 0)); // World space
-	return rayDirection;
+	return { rayDirection.x, -rayDirection.y, rayDirection.z };
 }

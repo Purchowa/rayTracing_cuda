@@ -7,4 +7,5 @@
 */
 struct Scene {
 	std::vector<Sphere> sphere;
+	std::vector<Material> material;
 };
