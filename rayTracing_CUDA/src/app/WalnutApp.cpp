@@ -10,6 +10,10 @@
 
 using namespace Walnut;
 
+/**
+* @class MainLayer
+* @brief Prepares the main application window.
+*/
 class MainLayer : public Walnut::Layer {
 public:
 	MainLayer() {

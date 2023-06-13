@@ -3,6 +3,9 @@
 #include <cuda_runtime.h>
 #include "Hittable.h"
 
+/**
+* @brief Defines 3D sphere on scene.
+*/
 class Sphere : private Hittable{
 public:
 	__device__ __host__ Sphere();
