@@ -9,9 +9,9 @@ public:
 	__device__ __host__ Sphere(const glm::vec3& center, const float radius, const int matIndex);
 
 	/**
-	* Calculates the closer hit point of given square using closest multiplier 't'. Calculations are done using sphere formula.
+	* @biref Calculates distance from ray origin to hit point. Calculations are done using sphere formula.
 	* @param Ray which contains origin of ray (camera origin) and direction for individual pixel.
-	* @return closest hit point
+	* @return distance to hit point
 	*/
 	__device__ float hit(const Ray& ray) const;
 	__device__ glm::vec3 getPosition() const { return position; };

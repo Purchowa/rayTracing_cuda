@@ -10,8 +10,8 @@ __global__ void initCurand(curandStatePhilox4_32_10_t *states,
     return;
   }
   curand_init(seed, (size_t)gIndex, 0, &states[gIndex]);
-  // Sequence 0 and offset 0 for better performance but may result in worse
-  // 'randomness'
+  
+
 }
 
 __device__ glm::vec3
@@ -87,13 +87,15 @@ __global__ void perPixel(uint32_t *imgBuff, glm::vec3 *accColor,
   if (imgDim.x <= x || imgDim.y <= y || imgDim.x * imgDim.y <= gIndex) {
     return;
   }
-  glm::vec2 coord = {((float)x * 2.f / (float)imgDim.x) - 1.f,
-                     ((float)y * 2.f / (float)imgDim.y) - 1.f}; // [-1; 1]
 
-  float grad = 0.5f * (-coord.y + 1.f);
-  glm::vec3 backgroundColor = {(1.f - grad) * glm::vec3(1.f, 1.f, 1.f) +
-                               grad * glm::vec3(0.3, 0.4, 0.5)};
-  backgroundColor = settings->backgroundColor;
+  //glm::vec2 coord = {((float)x * 2.f / (float)imgDim.x) - 1.f,
+  //                   ((float)y * 2.f / (float)imgDim.y) - 1.f}; // [-1; 1]
+
+  //float grad = 0.5f * (-coord.y + 1.f);
+  //glm::vec3 backgroundColor = {(1.f - grad) * glm::vec3(1.f, 1.f, 1.f) +
+  //                             grad * settings->backgroundColor };
+
+  glm::vec3 backgroundColor = settings->backgroundColor;
 
   if (!hittableSize) {
     imgBuff[gIndex] = convertFromRGBA(glm::vec4(backgroundColor, 1.f));
@@ -115,13 +117,14 @@ __global__ void perPixel(uint32_t *imgBuff, glm::vec3 *accColor,
     ray.direction = camera->calculateRayDirection(rndCoord);
     for (int j = 0; j < RAY_BOUNCE_COUNT; j++) {
         hitRecord = traceRay(ray, hittable, hittableSize);
-        const Sphere *sphere = &hittable[hitRecord.objectIndex];
-        const Material *mat = &material[sphere->getMaterialIdx()];
+        if (hitRecord.distance < 0.f) { // Didn't hit any hittable
+            light += backgroundColor * attenuation;
+            break;
+        }
 
-    if (hitRecord.distance < 0.f) { // Didn't hit any hittable
-        light += backgroundColor * attenuation;
-        break;
-    }
+        const Sphere* sphere = &hittable[hitRecord.objectIndex];
+        const Material* mat = &material[sphere->getMaterialIdx()];
+
         light += mat->getEmissionPower();
         attenuation *= mat->color;
 

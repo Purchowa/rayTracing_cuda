@@ -24,7 +24,7 @@ public:
 		scene.sphere.emplace_back(Sphere({ -1.2f, 0.4f, -1.f }, 0.6f, 2));
 	}
 	virtual void OnUpdate(float ts) override {
-		m_camera.OnUpdate(ts);
+		camera.OnUpdate(ts);
 	}
 
 	virtual void OnUIRender() override {
@@ -130,15 +130,15 @@ public:
 private:
 	Render render;
 	Scene scene;
-	Camera 	m_camera;
+	Camera 	camera;
 	uint32_t imageWidth = 0;
 	uint32_t imageHeight = 0;
 	bool realTimeRender = false;
 
 	void renderImage() {
 		render.onResize(imageWidth, imageHeight);
-		m_camera.OnResize(imageWidth, imageHeight);
-		render.render(scene, m_camera);
+		camera.OnResize(imageWidth, imageHeight);
+		render.render(scene, camera);
 ;
 	}
 };

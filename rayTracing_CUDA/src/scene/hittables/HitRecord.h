@@ -20,5 +20,5 @@ struct HitRecord {
 		normal = glm::dot(rayDirection, outwardNormal) > 0.f ? -outwardNormal : outwardNormal;
 	}
 
-	__device__ HitRecord() : normal(0.f), position(), distance(-1.f), objectIndex() {}
+	__device__ HitRecord() : normal(0.f), position(0.f), distance(-1.f), objectIndex(0) {}
 };

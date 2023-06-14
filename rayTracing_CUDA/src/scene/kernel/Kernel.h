@@ -37,7 +37,7 @@ public:
 	uint32_t getAccN() const { return accSampleNum; }
 	void setAccN(uint32_t val) { accSampleNum = val; }
 private:
-	static constexpr int RAY_BOUNCE_COUNT = 20;
+	static constexpr int RAY_BOUNCE_COUNT = 5;
 
 	const uint32_t TPB; /*!< Threads per block */
 	float kernelTimeMs;
