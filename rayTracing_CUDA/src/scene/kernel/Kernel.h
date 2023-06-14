@@ -17,25 +17,12 @@ using std::string;
 
 /**
 * @class Kernel
-<<<<<<< HEAD
-* @brief Serves to operate with GPU kernel
-=======
 * @brief Responsible to run kernel directly with parameters. Configure kernel parameters and send values
->>>>>>> develop
 */
 class Kernel {
 public:
 	Kernel();
 	~Kernel();
-<<<<<<< HEAD
-	void setImgDim(glm::uvec2 imgDim);	
-	void setBuffer(uint32_t* buffer, glm::vec4* accColor);
-	/**
-	* @brief Launches kernel on GPU based on runtime scene and camera
-	* @param scene Runtime scene
-	* @param camera Runtime camera (observer)
-	*/
-=======
 	void setImgDim(glm::uvec2 imgDim);
 	void setBuffer(uint32_t* buffer, glm::vec3* accColor);
 	/**
@@ -44,11 +31,10 @@ public:
 	 * @param camera - Abstract camera that can move around the scene
 	 * @param settings - Instructions for kernel
 	 */
->>>>>>> develop
 	void runKernel(const Scene& scene, const Camera& camera, const Settings settings);
 	/**
 	* @brief Calculates kernel execution time
-	* @return Elapsed time in miliseconds
+	* @return Elapsed time in milliseconds
 	*/
 	float getKernelTimeMs();
 
