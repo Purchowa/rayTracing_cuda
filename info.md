@@ -4,7 +4,7 @@ Ray tracing is a rendering technique that allows to simulate realistic behaviour
 
 # Project requirements:
 - Visual Studio 2019
-- Vulkan SDK latest
+- Vulkan SDK 1.3
 - CUDA toolkit 12.1
 - Compute Capability >=5.2
 
