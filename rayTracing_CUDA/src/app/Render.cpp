@@ -58,5 +58,6 @@ void Render::reallocateImageBuffer(uint32_t x, uint32_t y)
 	accColor = new glm::vec3[x * (size_t)y];
 	std::memset(accColor, 0, sizeof(*accColor) * (x * (size_t)y));
 	std::memset(imageBuffer, 0, sizeof(*imageBuffer) * (x * (size_t)y));
+
 }
 

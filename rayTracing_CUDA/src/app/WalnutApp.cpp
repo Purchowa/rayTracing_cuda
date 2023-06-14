@@ -18,9 +18,9 @@ class MainLayer : public Walnut::Layer {
 public:
 	MainLayer() {
 		scene.material.reserve(5);
-		scene.material.emplace_back(Material({ 0.4f, 0.4f, 0.4f}, 1.f, 0.f));
-		scene.material.emplace_back(Material({ 0.3f, 0.4f, 0.f}, 0.6f, 6.f));
-		scene.material.emplace_back(Material({ 0.4, 0.4, 0.4}, 0.0f, 0.f));
+		scene.material.emplace_back(Material({ 0.2f, 0.6f, 0.1f}, 1.f, 0.f));
+		scene.material.emplace_back(Material({ 0.3f, 0.4f, 0.f}, 0.6f, 0.f));
+		scene.material.emplace_back(Material({ 0.8, 0.8, 0.1}, 0.0f, 0.f));
 
 		scene.sphere.reserve(5);
 		scene.sphere.emplace_back(Sphere({ 0.f, -100.5f, -1.f }, 100.f, 0)); // world

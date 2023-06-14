@@ -24,11 +24,6 @@ class Kernel {
 public:
 	Kernel();
 	~Kernel();
-	/**
-	* @brief Launches kernel on GPU based on runtime scene and camera
-	* @param scene Runtime scene
-	* @param camera Runtime camera (observer)
-	*/
 	void setImgDim(glm::uvec2 imgDim);
 	void setBuffer(uint32_t* buffer, glm::vec3* accColor);
 	/**
