@@ -37,7 +37,6 @@ public:
 	uint32_t getAccN() const { return accSampleNum; }
 	void setAccN(uint32_t val) { accSampleNum = val; }
 private:
-	static constexpr int ANTIALIASING_SAMPLES = 1;
 	static constexpr int RAY_BOUNCE_COUNT = 20;
 
 	const uint32_t TPB; /*!< Threads per block */
@@ -106,7 +105,7 @@ __device__ glm::vec3 randomDirectionUnitSphere(curandStatePhilox4_32_10_t* rndSt
 
 // CUDA Errors
 /**
- * Macro for error checks in CUDA operations.
+ * @brief Macro for error checks in CUDA operations.
  */
 #define gpuErrChk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
 static void gpuAssert(cudaError_t code, const char* file, int line, bool abort = true) {

@@ -71,7 +71,8 @@ __device__ HitRecord closestHit(const Ray ray, float hitDistance,
 }
 
 __device__ HitRecord miss(const Ray ray) { return HitRecord(); }
-template <int ANTIALIASING_SAMPLES, int RAY_BOUNCE_COUNT>
+
+template <int RAY_BOUNCE_COUNT>
 __global__ void perPixel(uint32_t *imgBuff, glm::vec3 *accColor,
                          const uint32_t accSampleNum, const glm::uvec2 imgDim,
                          curandStatePhilox4_32_10_t *rndState,
@@ -106,7 +107,6 @@ __global__ void perPixel(uint32_t *imgBuff, glm::vec3 *accColor,
 
   ray.origin = camera->GetPosition();
 
-  for (int i = 0; i < ANTIALIASING_SAMPLES; i++) {
     glm::vec2 rndCoord{
         ((x + curand_uniform(&rndState[gIndex])) * 2.f) / float(imgDim.x) - 1.f,
         ((y + curand_uniform(&rndState[gIndex])) * 2.f) / float(imgDim.y) -
@@ -114,24 +114,23 @@ __global__ void perPixel(uint32_t *imgBuff, glm::vec3 *accColor,
 
     ray.direction = camera->calculateRayDirection(rndCoord);
     for (int j = 0; j < RAY_BOUNCE_COUNT; j++) {
-      hitRecord = traceRay(ray, hittable, hittableSize);
-      const Sphere *sphere = &hittable[hitRecord.objectIndex];
-      const Material *mat = &material[sphere->getMaterialIdx()];
+        hitRecord = traceRay(ray, hittable, hittableSize);
+        const Sphere *sphere = &hittable[hitRecord.objectIndex];
+        const Material *mat = &material[sphere->getMaterialIdx()];
 
-      if (hitRecord.distance < 0.f) { // Didn't hit any hittable
+    if (hitRecord.distance < 0.f) { // Didn't hit any hittable
         light += backgroundColor * attenuation;
         break;
-      }
-      light += mat->getEmissionPower();
-      attenuation *= mat->color;
+    }
+        light += mat->getEmissionPower();
+        attenuation *= mat->color;
 
-      ray.origin = hitRecord.position + hitRecord.normal * 0.0001f;
-      ray.direction =
+        ray.origin = hitRecord.position + hitRecord.normal * 0.0001f;
+        ray.direction =
           hitRecord.normal +
           mat->roughness * randomDirectionUnitSphere(&rndState[gIndex]);
     }
-  }
-  glm::vec3 color = light / (float)ANTIALIASING_SAMPLES;
+  glm::vec3 color = light;
 
   uint32_t &buff = imgBuff[gIndex];
   glm::vec3 &acc = accColor[gIndex];
@@ -203,7 +202,7 @@ void Kernel::runKernel(const Scene &scene, const Camera &camera,
   if (camera.Moved() || !settings.accumulate) accSampleNum = 1;
   else accSampleNum++;
 
-  perPixel<ANTIALIASING_SAMPLES, RAY_BOUNCE_COUNT><<<gridDim, blockDim>>>(
+  perPixel<RAY_BOUNCE_COUNT><<<gridDim, blockDim>>>(
       d_buffer, d_accColor, accSampleNum, imgDim, d_curandState, d_hittable,
       scene.sphere.size(), d_material, d_camera, d_settings);
 
