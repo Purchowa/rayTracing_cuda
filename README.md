@@ -1,15 +1,17 @@
 # Ray tracing with CUDA
-# What is ray tracing?
+## What is ray tracing?
 Ray tracing is a rendering technique that allows to simulate realistic behaviour of light in games, animations etc. It also allows to perform shades, reflections and lighting.
 
 # Project requirements:
-- Visual Studio 2019
-- Vulkan SDK 1.3
-- CUDA toolkit 12.1
-- Compute Capability >=5.2
+VS configuration:
+- VS 2019,
+- CUDA Toolkit - 12.1,
+- Default compute capability - I guess it inherits on its own,
+- Vulcan SDK.
 
 # Build / compilation instruction
 Having downloaded project, launch Setup.bat file in order to configure CUDA in the project and create solution file.
+Building project files (.sln, .vcxproj) achived with premake.
 ```
 ├── bin
 ├── doc
@@ -17,7 +19,6 @@ Having downloaded project, launch Setup.bat file in order to configure CUDA in t
 │   ├── scripts
 │    	└── Setup.bat
 ```
-Then you can just compile it using MSVC compiler.
 
-<sub>Used framework GUI</sub> 
-[Walnut](https://github.com/TheCherno/Walnut)
+### Framework for GUI
+- [Walnut](https://github.com/TheCherno/Walnut)
