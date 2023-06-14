@@ -57,6 +57,11 @@ public:
 				scene.sphere.pop_back();
 			}
 		}
+
+		ImGui::Text("Environment");
+		ImGui::ColorEdit3("Background color", glm::value_ptr(render.getSettingsRef().backgroundColor));
+		ImGui::Separator();
+
 		for (int i = 0; i < scene.sphere.size(); i++) {
 			ImGui::PushID(i);
 			if (i == 0)

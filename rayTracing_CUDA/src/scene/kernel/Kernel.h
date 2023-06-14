@@ -12,6 +12,7 @@
 #include "../hittables/HitRecord.h"
 #include "../../app/Settings.h"
 
+
 using std::string;
 
 /**
@@ -67,8 +68,9 @@ __global__ void initCurand(curandStatePhilox4_32_10_t* states, const glm::uvec2 
  * @param hittableSize - number of hittable objects.
  * @param material - list of materials that can be assigned to any hittable object.
  * @param camera - camera that can be moved around scene.
+ * @param settings - background color
  */
-__global__ void perPixel(uint32_t* imgBuff, glm::vec3 *accColor, const uint32_t accSampleNum, const glm::uvec2 imgDim, curandStatePhilox4_32_10_t* rndState, const Sphere* hittable, const uint32_t hittableSize, const Material* material, const Camera* camera);
+__global__ void perPixel(uint32_t* imgBuff, glm::vec3 *accColor, const uint32_t accSampleNum, const glm::uvec2 imgDim, curandStatePhilox4_32_10_t* rndState, const Sphere* hittable, const uint32_t hittableSize, const Material* material, const Camera* camera,  Settings* settings);
 
 /**
  * @brief Device function for tracing rays path around scene.
