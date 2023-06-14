@@ -18,9 +18,9 @@ class MainLayer : public Walnut::Layer {
 public:
 	MainLayer() {
 		scene.material.reserve(5);
-		scene.material.emplace_back(Material({ 0.1f, 0.1f, 0.1f, 1.f }, 1.f, 0.f));
-		scene.material.emplace_back(Material({ 0.3f, 0.4f, 0.f, 1.f }, 0.6f, 0.f));
-		scene.material.emplace_back(Material({ 0.6, 0.6, 0.6, 1.f }, 0.0f, 0.f));
+		scene.material.emplace_back(Material({ 0.4f, 0.4f, 0.4f}, 1.f, 0.f));
+		scene.material.emplace_back(Material({ 0.3f, 0.4f, 0.f}, 0.6f, 6.f));
+		scene.material.emplace_back(Material({ 0.4, 0.4, 0.4}, 0.0f, 0.f));
 
 		scene.sphere.reserve(5);
 		scene.sphere.emplace_back(Sphere({ 0.f, -100.5f, -1.f }, 100.f, 0)); // world
@@ -28,7 +28,7 @@ public:
 		scene.sphere.emplace_back(Sphere({ -1.2f, 0.4f, -1.f }, 0.6f, 2));
 	}
 	virtual void OnUpdate(float ts) override {
-		m_camera.OnUpdate(ts);
+		camera.OnUpdate(ts);
 	}
 
 	virtual void OnUIRender() override {
@@ -61,6 +61,11 @@ public:
 				scene.sphere.pop_back();
 			}
 		}
+
+		ImGui::Text("Environment");
+		ImGui::ColorEdit3("Background color", glm::value_ptr(render.getSettingsRef().backgroundColor));
+		ImGui::Separator();
+
 		for (int i = 0; i < scene.sphere.size(); i++) {
 			ImGui::PushID(i);
 			if (i == 0)
@@ -99,8 +104,9 @@ public:
 				ImGui::Text("Material ground");
 			else
 				ImGui::Text("Material %d", i);
-			ImGui::ColorEdit4("Color", glm::value_ptr(scene.material[i].color));
+			ImGui::ColorEdit3("Color", glm::value_ptr(scene.material[i].color));
 			ImGui::DragFloat("Roughness", &scene.material[i].roughness, 0.01f, 0.f, 1.f);
+			ImGui::DragFloat("Emission", &scene.material[i].emission, 0.01f, 0.f, FLT_MAX);
 			ImGui::Separator();
 			ImGui::PopID();
 		}
@@ -128,15 +134,15 @@ public:
 private:
 	Render render;
 	Scene scene;
-	Camera 	m_camera;
+	Camera 	camera;
 	uint32_t imageWidth = 0;
 	uint32_t imageHeight = 0;
 	bool realTimeRender = false;
 
 	void renderImage() {
 		render.onResize(imageWidth, imageHeight);
-		m_camera.OnResize(imageWidth, imageHeight);
-		render.render(scene, m_camera);
+		camera.OnResize(imageWidth, imageHeight);
+		render.render(scene, camera);
 ;
 	}
 };
