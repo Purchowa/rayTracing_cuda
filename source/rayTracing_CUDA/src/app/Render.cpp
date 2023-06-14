@@ -41,15 +41,6 @@ Render::~Render() {
 }
 
 
-void Render::reallocateImageBuffer(uint32_t x, uint32_t y) {
-  delete[] imageBuffer;
-  delete[] accColor;
-  imageBuffer = new uint32_t[x * (size_t)y];
-  accColor = new glm::vec4[x * (size_t)y];
-  std::memset(accColor, 0, sizeof(*accColor) * (x * (size_t)y));
-  std::memset(imageBuffer, 0, sizeof(*imageBuffer) * (x * (size_t)y));
-}
-
 void Render::reallocateImageBuffer(uint32_t x, uint32_t y)
 {
 	delete[] imageBuffer;

@@ -10,7 +10,7 @@ project "rayTracing_CUDA"
    files {"src/app/**.h", "src/app/**.cpp"}
 
    -- CUDA configurations
-    buildcustomizations "BuildCustomizations/CUDA 11.8"
+    buildcustomizations "BuildCustomizations/CUDA 12.1"
 
     externalwarnings "Off" -- thrust gives a lot of warnings
     cudaFiles { "src/scene/**.cu", "src/scene/**.cpp", "src/scene/**.h" } -- files to be compiled into binaries
