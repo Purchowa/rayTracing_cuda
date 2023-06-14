@@ -3,7 +3,7 @@
 #include "hittables/Sphere.h"
 
 /**
-* @brief Simple structure for storing objects in scene
+* @brief Simple structure for storing material objects in scene
 */
 struct Scene {
 	std::vector<Sphere> sphere;
