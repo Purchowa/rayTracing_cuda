@@ -917,13 +917,13 @@ WARN_LOGFILE           =
 # spaces. See also FILE_PATTERNS and EXTENSION_MAPPING
 # Note: If this tag is empty the current directory is searched.
 
-INPUT                  = "..\rayTracing_cuda\rayTracing_CUDA\src\app" \
-                         "..\rayTracing_cuda\rayTracing_CUDA\src\scene\camera" \
-                         "..\rayTracing_cuda\rayTracing_CUDA\src\scene\hittables" \
-                         "..\rayTracing_cuda\rayTracing_CUDA\src\scene\kernel" \
-                         "..\rayTracing_cuda\rayTracing_CUDA\src\scene\utils" \
-                         "..\rayTracing_cuda\rayTracing_CUDA\src\scene" \
-                         "..\rayTracing_cuda\info.md"
+INPUT                  = "..\source\rayTracing_CUDA\src\app" \
+                         "..\source\rayTracing_CUDA\src\scene\camera" \
+                         "..\source\rayTracing_CUDA\src\scene\hittables" \
+                         "..\source\rayTracing_CUDA\src\scene\kernel" \
+                         "..\source\rayTracing_CUDA\src\scene\utils" \
+                         "..\source\rayTracing_CUDA\src\scene" \
+                         "..\source\info.md"
                          
 
 # This tag can be used to specify the character encoding of the source files

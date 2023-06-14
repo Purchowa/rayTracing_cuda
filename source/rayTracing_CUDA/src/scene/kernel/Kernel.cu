@@ -88,13 +88,6 @@ __global__ void perPixel(uint32_t *imgBuff, glm::vec3 *accColor,
     return;
   }
 
-  //glm::vec2 coord = {((float)x * 2.f / (float)imgDim.x) - 1.f,
-  //                   ((float)y * 2.f / (float)imgDim.y) - 1.f}; // [-1; 1]
-
-  //float grad = 0.5f * (-coord.y + 1.f);
-  //glm::vec3 backgroundColor = {(1.f - grad) * glm::vec3(1.f, 1.f, 1.f) +
-  //                             grad * settings->backgroundColor };
-
   glm::vec3 backgroundColor = settings->backgroundColor;
 
   if (!hittableSize) {
@@ -129,9 +122,11 @@ __global__ void perPixel(uint32_t *imgBuff, glm::vec3 *accColor,
         attenuation *= mat->color;
 
         ray.origin = hitRecord.position + hitRecord.normal * 0.0001f;
+        glm::vec3 reflect = glm::reflect(ray.direction, hitRecord.normal);
+
         ray.direction =
-          hitRecord.normal +
-          mat->roughness * randomDirectionUnitSphere(&rndState[gIndex]);
+            reflect +
+            mat->roughness * randomDirectionUnitSphere(&rndState[gIndex]);
     }
   glm::vec3 color = light;
 
